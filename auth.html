@@ -108,7 +108,9 @@
         createUserWithEmailAndPassword, 
         signInWithEmailAndPassword,
         onAuthStateChanged,
-        updateProfile
+        updateProfile,
+        setPersistence,
+        browserSessionPersistence
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -210,6 +212,8 @@
         const email = document.getElementById('login-email').value.trim();
         const password = document.getElementById('login-password').value;
         try {
+            // Aplicar persistencia de sesión (se cierra al cerrar la pestaña)
+            await setPersistence(auth, browserSessionPersistence);
             const userCred = await signInWithEmailAndPassword(auth, email, password);
             // No seteamos nada localmente aquí; dejaremos que index.html recupere el displayName real de la nube
             showMessage('success', '✅ ¡Bienvenido! Entrando a DidactIA...');
@@ -237,6 +241,8 @@
         const email = document.getElementById('reg-email').value.trim();
         const password = document.getElementById('reg-password').value;
         try {
+            // Aplicar persistencia de sesión tb al registrarse
+            await setPersistence(auth, browserSessionPersistence);
             const userCred = await createUserWithEmailAndPassword(auth, email, password);
             
             // Guardamos el perfil en el sistema central de Firebase

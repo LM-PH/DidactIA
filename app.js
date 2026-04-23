@@ -88,27 +88,29 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // --- LÓGICA DE PERFIL DIDACTIA v5.3 (Luis Miguel Priority) ---
+        // --- LÓGICA DE PERFIL DIDACTIA v5.4 (Silent Logic) ---
         let nickname = user.displayName;
         const localNick = localStorage.getItem(`nick_${user.uid}`);
 
-        // Función para limpiar correos y fantasmas
-        const isEmailGhost = (str) => {
-            return !str || str.includes('@') || str.includes('_') || str.includes('.');
+        // Función para limpiar nombres técnicos/correos
+        const cleanName = (str) => {
+            if (!str) return 'Docente';
+            // Quita @dominio, puntos y guiones bajos: luis.miguel_profe@gmail -> Luis
+            return str.split('@')[0].split('.')[0].split('_')[0];
         };
 
-        // PRIORIDAD 1: El nombre guardado en la nube de Google/Firebase
-        if (isEmailGhost(nickname)) {
-            // PRIORIDAD 2: El nombre guardado localmente (solo si no es correo)
-            if (localNick && !isEmailGhost(localNick)) {
-                nickname = localNick;
-                // Sincronizar local -> nube ya que la nube está "sucia"
-                await updateProfile(user, { displayName: localNick });
-            } else {
-                nickname = 'Docente'; // Fallback final
-            }
+        // Si no hay nombre en la nube, intentar local o limpiar email
+        if (!nickname) {
+            nickname = localNick || cleanName(user.email);
         }
 
+        // Si el nombre viene de un correo y no se ha limpiado bien
+        if (nickname.includes('@') || nickname.includes('_')) {
+            nickname = cleanName(nickname);
+        }
+
+        nickname = nickname.charAt(0).toUpperCase() + nickname.slice(1);
+        
         const name = localStorage.getItem(`name_${user.uid}`) || nickname;
         USER_DATA = { nickname, name };
         
@@ -119,22 +121,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const vTag = document.getElementById('version-tag') || document.createElement('div');
         vTag.id = 'version-tag';
         vTag.style = "position:fixed; bottom:5px; right:12px; font-size:10px; color:rgba(255,255,255,0.3); z-index:100;";
-        vTag.textContent = "DidactIA v5.3 (Luis Miguel Fix)";
+        vTag.textContent = "DidactIA v5.4 (Session Lock Active)";
         document.body.appendChild(vTag);
 
-        // Si después de todo sigue saliendo un fantasma del correo, obligar a corregir
-        if (isEmailGhost(nickname) || nickname === 'Docente' || !localStorage.getItem('profile_ LuisMiguel_Fix')) {
-            const realName = prompt("¡Hola! Detectamos que tu nombre no se configuró bien. ¿Cómo te llamas? (Ej: Luis Miguel)", nickname !== 'Docente' ? nickname : "");
-            if (realName) {
-                await updateProfile(user, { displayName: realName });
-                localStorage.setItem(`nick_${user.uid}`, realName);
-                localStorage.setItem('profile_ LuisMiguel_Fix', 'true');
-                location.reload();
-                return;
-            }
-        }
-
-        // Permitir cambiar el nickname haciendo clic
+        // Permitir cambiar el nickname haciendo clic en el chip si el usuario lo desea
         userChip.onclick = async () => {
             const newNick = prompt("Cambiar mi nombre de docente:", nickname);
             if (newNick && newNick !== nickname) {
@@ -146,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Mostrar saludo inicial
         if (chatMessages.children.length === 0) {
-            addMessage(`¡Excelente día, ${nickname}! 👋 Soy DidactIA. ¿Qué asignatura o tema vamos a planear hoy?`, 'bot');
+            addMessage(`¡Hola, ${nickname}! 👋 Soy DidactIA. ¿En qué vamos a trabajar hoy?`, 'bot');
         }
 
         // Quitar el protector de carga
