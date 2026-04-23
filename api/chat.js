@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     GRAN REGLA: Necesitas Asignatura, Grado, Tema y NÚMERO DE SESIONES (dosificación).
     Inmediatamente al tener los datos, genera las 7 tablas HTML dentro de <div id="planeacion-oficial"> ... </div>.`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
     const payload = {
         contents: [
