@@ -23,7 +23,7 @@ fetch('programa_sintetico.txt')
     })
     .catch(err => console.error("No se pudo cargar el programa sintético:", err));
 
-// DidactIA v6.7 - PDF Mode + Cache Buster Active
+// DidactIA v6.8 - Clean PDF Export Active
 document.addEventListener('DOMContentLoaded', () => {
     const authGuard = document.getElementById('auth-guard');
     const userNicknameSpan = document.getElementById('user-nickname');
@@ -179,7 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 #planeacion-oficial { width: 100%; }
                 h1, h2 { color: #1e1b4b; }
             </style>
-            <h1 style="text-align:center; font-size: 18pt;">Planeación Didáctica DidactIA</h1>
             ${currentPlanningHtml}
         `;
 
