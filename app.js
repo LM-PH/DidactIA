@@ -168,16 +168,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     downloadBtn.addEventListener('click', () => {
         if (!currentPlanningHtml) return alert('No hay planeación cargada.');
-        const preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Planeación DidactIA</title></head><body>";
-        const postHtml = "</body></html>";
-        const html = preHtml + currentPlanningHtml + postHtml;
-        const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = 'Planeacion_DidactIA.doc';
-        link.click();
-        URL.revokeObjectURL(url);
+        
+        const element = document.createElement('div');
+        element.innerHTML = `
+            <style>
+                body { font-family: 'Inter', sans-serif; padding: 20px; color: #333; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }
+                th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 10pt; word-wrap: break-word; }
+                th { background-color: #f8f9fa; color: #6366f1; }
+                #planeacion-oficial { width: 100%; }
+                h1, h2 { color: #1e1b4b; }
+            </style>
+            <h1 style="text-align:center; font-size: 18pt;">Planeación Didáctica DidactIA</h1>
+            ${currentPlanningHtml}
+        `;
+
+        const opt = {
+            margin:       [10, 10, 10, 10],
+            filename:     'Planeacion_DidactIA.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'letter', orientation: 'portrait' }
+        };
+
+        // Nueva forma de descargar en PDF profesional
+        html2pdf().set(opt).from(element).save();
     });
 
     finalizeBtn.onclick = () => { if(currentPlanningHtml) downloadBtn.click(); };
