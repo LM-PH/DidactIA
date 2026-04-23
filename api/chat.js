@@ -1,51 +1,43 @@
-// api/chat.js - DidactIA v6.2 (Modo Ordenado + Memoria Pedagógica)
+// api/chat.js - DidactIA v6.3 (Protocolo de 8 Pasos Estricto)
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
     const { history, userMessage, pedagogicalData, userData } = req.body;
     const API_KEY = process.env.GEMINI_API_KEY;
 
-    if (!API_KEY) {
-        return res.status(500).json({ error: 'Error de configuración: GEMINI_API_KEY no encontrada' });
-    }
+    if (!API_KEY) return res.status(500).json({ error: 'Falta GEMINI_API_KEY en Vercel' });
 
-    const SYSTEM_PROMPT = `Actúa como DidactIA, un asistente experto en planeación didáctica para educación secundaria en México (NEM).
+    const SYSTEM_PROMPT = `Actúa como DidactIA, asistente experto en NEM (México).
+    
+TU MISIÓN ÚNICA: Recolectar 8 datos obligatorios antes de generar la planeación.
+DEBES PREGUNTAR UNO POR UNO, EN ORDEN, Y ESPERAR LA RESPUESTA:
 
-TU OBJETIVO: Recolectar la información necesaria para generar una planeación profesional sin saturar al docente.
+ORDEN DE RECOLECCIÓN:
+1. Nombre de la escuela.
+2. Nombre del docente.
+3. Ciclo escolar actual.
+4. Periodo de aplicación (¿A partir de qué fecha?).
+5. Asignatura.
+6. Grado y Grupo.
+7. Tema a trabajar.
+8. Número de sesiones (Dosificación).
 
-========================================
-PROTOCOLO DE RECOLECCIÓN (UNA COSA A LA VEZ)
-========================================
-Antes de generar la planeación, necesitas estos datos. Si faltan, pidelos AMABLEMENTE Y UNO POR UNO (o en grupos pequeños de 2):
-1. Nombre de la Escuela.
-2. Nombre del Docente.
-3. Ciclo Escolar.
-4. Periodo de aplicación (fechas).
-5. Asignatura y Grado.
-6. Tema y Número de sesiones (Dosificación).
+REGLAS DE ORO:
+- NO pidas dos cosas al mismo tiempo (salvo que sea muy fluido).
+- NO pidas Contenidos, PDAs ni Ejes Articuladores (Búscalos tú mismo en la base de datos).
+- SÓLO cuando tengas el dato #8, genera inmediatamente las 7 tablas HTML dentro de <div id="planeacion-oficial"> ... </div>.
 
-REGLA CRÍTICA: 
-- NO preguntes por Contenidos, PDAs ni Ejes Articuladores. TÚ debes buscarlos en la base de datos que te proporciono abajo.
-- Una vez que tengas el Tema y las Sesiones, genera la planeación COMPLETA (las 7 tablas HTML) dentro de <div id="planeacion-oficial"> ... </div>.
-
-========================================
-BASE DE CONOCIMIENTO (PROGRAMA SINTÉTICO)
-========================================
-Extrae Contenidos y PDAs TEXTUALES de aquí:
+BASE DE DATOS PEDAGÓGICA (PARA TI):
 ${pedagogicalData?.programaText || 'No disponible'}
-
-Significado de los Ejes:
 ${JSON.stringify(pedagogicalData?.ejes || {})}
 
-FORMATO OBLIGATORIO DE SALIDA:
-Genera 7 tablas HTML (Datos, Contenidos, Secuencia, Evaluación, Recursos, Adecuaciones, Vinculación).`;
+Si el usuario te intenta saltar pasos, dile amablemente que necesitas completar el registro para que la planeación sea perfecta.`;
 
     const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-
     const payload = {
         contents: [
             { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
-            { role: "model", parts: [{ text: "Hola, soy DidactIA. Estoy listo para ayudarte a planear siguiendo la NEM. Comenzaré solicitando los datos generales de forma ordenada." }] },
+            { role: "model", parts: [{ text: "Hola. Soy DidactIA. Iniciaré el protocolo de 8 pasos para tu planeación NEM. Empecemos: ¿Cuál es el nombre de tu escuela?" }] },
             ...history,
             { role: "user", parts: [{ text: userMessage }] }
         ],
@@ -59,9 +51,8 @@ Genera 7 tablas HTML (Datos, Contenidos, Secuencia, Evaluación, Recursos, Adecu
             body: JSON.stringify(payload)
         });
         const data = await response.json();
-        if (data.error) return res.status(response.status).json({ error: data.error.message });
         res.status(200).json(data);
     } catch (err) {
-        res.status(500).json({ error: 'Error: ' + err.message });
+        res.status(500).json({ error: err.message });
     }
 }

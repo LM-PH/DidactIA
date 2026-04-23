@@ -17,7 +17,7 @@ fetch('programa_sintetico.txt')
     .then(text => PROGRAMA_TEXT = text)
     .catch(err => console.error("No se pudo cargar el programa sintético:", err));
 
-// DidactIA v6.2 - Brain Upgrade
+// DidactIA v6.3 - Sequential 8-Step Mode Active
 document.addEventListener('DOMContentLoaded', () => {
     // Referencias UI
     const authGuard = document.getElementById('auth-guard');
