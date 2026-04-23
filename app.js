@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // --- LÓGICA DE RECUPERACIÓN DE NICKNAME MEJORADA ---
+        // --- LÓGICA DE RECUPERACIÓN DE NICKNAME MEJORADA (v5.1) ---
         let nickname = user.displayName;
         const localNick = localStorage.getItem(`nick_${user.uid}`);
 
@@ -100,21 +100,30 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (e) { console.error("Error sincronizando perfil:", e); }
         }
 
-        // Si sigue vacío, usar el local o el prefijo del correo
-        if (!nickname) {
+        // Si sigue el correo o está vacío, procedemos a limpiar
+        if (!nickname || nickname.includes('@')) {
             nickname = localNick || (user.email ? user.email.split('@')[0] : 'Docente');
         }
 
-        // REGLA DE EMERGENCIA: Si por alguna razón el nickname sigue pareciendo un correo, limpiarlo.
+        // REGLA DE EMERGENCIA ABSOLUTA: Eliminar cualquier rastro de correo
         if (nickname && nickname.includes('@')) {
             nickname = nickname.split('@')[0];
         }
+        
+        // Formatear: capitalizar la primera letra si es un nombre corto
+        nickname = nickname.charAt(0).toUpperCase() + nickname.slice(1);
         
         const name = localStorage.getItem(`name_${user.uid}`) || nickname;
         USER_DATA = { nickname, name };
         
         userNicknameSpan.textContent = nickname;
         userAvatarDiv.textContent = nickname.charAt(0).toUpperCase();
+
+        // Agregar etiqueta de versión en el UI para confirmar actualización
+        const versionLabel = document.createElement('div');
+        versionLabel.style = "position:absolute; bottom:10px; left:10px; font-size:10px; color:gray; opacity:0.5;";
+        versionLabel.textContent = "v5.1 - Cloud Sync Active";
+        document.querySelector('.chat-section').appendChild(versionLabel);
 
         // Permitir cambiar el nickname si no le gusta (haciendo clic en su nombre)
         userChip.onclick = async () => {

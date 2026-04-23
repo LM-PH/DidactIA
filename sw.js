@@ -1,4 +1,4 @@
-const CACHE_NAME = 'didactia-v5';
+const CACHE_NAME = 'didactia-v6';
 const ASSETS = [
   './',
   './index.html',
