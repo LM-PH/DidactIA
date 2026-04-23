@@ -10,75 +10,14 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.error("Error al registrar SW:", err));
 }
 
-// Recuperar API_KEY de localStorage o pedirla si no existe
-let API_KEY = localStorage.getItem('GEMINI_API_KEY') || "";
-
-// Función para actualizar la API Key si es necesario
-window.updateApiKey = () => {
-    const newKey = prompt("Configuración de Seguridad: Ingresa tu API Key de Gemini (se guardará solo en este navegador):", API_KEY);
-    if (newKey) {
-        localStorage.setItem('GEMINI_API_KEY', newKey);
-        API_KEY = newKey;
-        location.reload();
-    }
-};
-
-// Si no hay llave, avisar al usuario sutilmente
-if (!API_KEY) {
-    console.warn("No se detectó API Key de Gemini. El chatbot no podrá responder.");
-}
 let USER_DATA = null;
-
 let PROGRAMA_TEXT = "";
 fetch('programa_sintetico.txt')
     .then(r => r.text())
     .then(text => PROGRAMA_TEXT = text)
     .catch(err => console.error("No se pudo cargar el programa sintético:", err));
 
-const SYSTEM_PROMPT = `Actúa como DidactIA, un asistente experto en planeación didáctica para educación secundaria en México, alineado a la Nueva Escuela Mexicana.
-
-Tu función es crear una secuencia didáctica COMPLETA en formato oficial tan pronto como el docente proporcione los datos base.
-
-========================================
-COMPORTAMIENTO DEL ASISTENTE
-========================================
-- TÚ ERES EXPERTO EN EL PLAN SINTÉTICO 2022. **REGLA DE ORO:** Si el docente te pega o te da textualmente sus propios Contenidos y PDAs en el chat, **TIENES QUE USARLOS AL PIE DE LA LETRA, no los cambies, no los ignores ni inventes otros.** Úsalos textualmente. Solo si el docente NO te los da, entonces tú propónlos usando tu base de datos. NUNCA le pidas que te los dé si tú ya tienes unos, pero respeta su autoridad si te los entrega.
-- **GRAN REGLA:** Para generar la planeación necesitas: Asignatura, Grado, Tema y **NÚMERO DE SESIONES**. Si el docente te da su tema pero no el número de sesiones, PREGÚNTALE "¡Excelente maestro! ¿Cuántas sesiones o clases le vas a dedicar a este tema para dosificarlo?". **En cuanto tengas ese dato, GENERA Inmediatamente LA PLANEACIÓN COMPLETA (las 7 tablas) EN UN SOLO MENSAJE.**
-- NO DETENGAS la generación para preguntar por actividades, ni propósitos, ni evaluación. INVENTA, PROPÓN Y LLENA toda la planeación de forma lógica y creativa basada en la Nueva Escuela Mexicana.
-- DESPUÉS de mostrar la planeación completa en pantalla, puedes preguntar: "¿Qué te parece? ¿Quisieras cambiar alguna actividad, evaluación o adaptar algo a tu contexto?"
-- Usa un tono profesional, claro y práctico. Evita explicaciones largas o teóricas.
-
-========================================
-DATOS MÍNIMOS (NO TE DETENGAS A PREGUNTARLOS TODOS SI YA TE DIERON EL TEMA)
-========================================
-- Docente
-- Escuela
-- Grado y grupo
-- Campo formativo
-- Fase
-- Asignatura
-- Tema
-- ***Número de sesiones / dosificación (CRÍTICO)***
-- Temporalidad (semanal o quincenal)
-- Fecha
-
-========================================
-FORMATO OBLIGATORIO (NO MODIFICAR)
-========================================
-Genera la planeación ÚNICAMENTE con esta estructura:
-1. DATOS GENERALES (Tabla HTML)
-2. CONTENIDOS Y PROCESOS (Tabla HTML)
-3. SECUENCIA DIDÁCTICA (Tabla HTML: Momento | Actividades | Organización | Recursos | Evidencias | Evaluación formativa)
-4. EVALUACIÓN (Tabla HTML)
-5. RECURSOS Y MATERIALES (Tabla HTML)
-6. ADECUACIONES (Tabla HTML)
-7. VINCULACIÓN INTERDISCIPLINARIA (Tabla HTML)
-
-REGLAS DE SALIDA:
-- Usa etiquetas <table>, <tr>, <th> y <td> para todas las tablas.
-- Asegúrate de que TODA la respuesta esté dentro de <div id="planeacion-oficial"> ... </div>. Esto es vital para el visor lateral.
-- Puedes agregar texto explicativo o saludos FUERA del div de la planeación.`;
-
+// DidactIA v5.8 - Vercel Tunnel Active
 document.addEventListener('DOMContentLoaded', () => {
     // Referencias UI
     const authGuard = document.getElementById('auth-guard');
@@ -104,43 +43,38 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // --- LÓGICA DE PERFIL DIDACTIA v5.4 (Silent Logic) ---
+        authGuard.style.display = 'none';
+
+        // Lógica de Perfil v5.8 (Silent)
         let nickname = user.displayName;
         const localNick = localStorage.getItem(`nick_${user.uid}`);
 
-        // Función para limpiar nombres técnicos/correos
         const cleanName = (str) => {
             if (!str) return 'Docente';
-            // Quita @dominio, puntos y guiones bajos: luis.miguel_profe@gmail -> Luis
             return str.split('@')[0].split('.')[0].split('_')[0];
         };
 
-        // Si no hay nombre en la nube, intentar local o limpiar email
         if (!nickname) {
             nickname = localNick || cleanName(user.email);
         }
 
-        // Si el nombre viene de un correo y no se ha limpiado bien
         if (nickname.includes('@') || nickname.includes('_')) {
             nickname = cleanName(nickname);
         }
 
         nickname = nickname.charAt(0).toUpperCase() + nickname.slice(1);
-        
         const name = localStorage.getItem(`name_${user.uid}`) || nickname;
         USER_DATA = { nickname, name };
         
         userNicknameSpan.textContent = nickname;
         userAvatarDiv.textContent = nickname.charAt(0).toUpperCase();
 
-        // Etiqueta de versión para control
         const vTag = document.getElementById('version-tag') || document.createElement('div');
         vTag.id = 'version-tag';
         vTag.style = "position:fixed; bottom:5px; right:12px; font-size:10px; color:rgba(255,255,255,0.3); z-index:100;";
-        vTag.textContent = "DidactIA v5.4 (Session Lock Active)";
+        vTag.textContent = "DidactIA v5.8 (Vercel Secure Mode)";
         document.body.appendChild(vTag);
 
-        // Permitir cambiar el nickname haciendo clic en el chip si el usuario lo desea
         userChip.onclick = async () => {
             const newNick = prompt("Cambiar mi nombre de docente:", nickname);
             if (newNick && newNick !== nickname) {
@@ -150,63 +84,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        // Mostrar saludo inicial
         if (chatMessages.children.length === 0) {
             addMessage(`¡Hola, ${nickname}! 👋 Soy DidactIA. ¿En qué vamos a trabajar hoy?`, 'bot');
         }
-
-        // Quitar el protector de carga
-        authGuard.style.opacity = '0';
-        setTimeout(() => authGuard.style.display = 'none', 300);
     });
 
-    // Logout
-    logoutBtn.addEventListener('click', async () => {
-        if (confirm('¿Cerrar sesión de DidactIA?')) {
-            await signOut(auth);
-            window.location.href = 'auth.html';
-        }
-    });
+    logoutBtn.onclick = () => signOut(auth);
 
-    // Nuevo Chat
-    newChatBtn.addEventListener('click', () => {
-        if (confirm('¿Deseas iniciar una nueva planeación? Se borrará el chat actual.')) {
-            chatMessages.innerHTML = '';
-            contentViewer.innerHTML = `<div class="viewer-placeholder"><div class="placeholder-icon">📋</div><h3>Tu planeación aparecerá aquí</h3><p>Comienza la conversación con DidactIA.</p></div>`;
-            conversationHistory = [];
-            currentPlanningHtml = '';
-            addMessage(`Entendido. Empecemos de nuevo. ¿Qué tema o asignatura planearemos hoy?`, 'bot');
-        }
-    });
-
-    // Auto-resize textarea
-    chatInput.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = (this.scrollHeight) + 'px';
-    });
-
-    // Handle Send Button
-    sendBtn.addEventListener('click', sendMessage);
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
-
-    async function sendMessage() {
+    // Lógica del Chat
+    async function handleSend() {
         const text = chatInput.value.trim();
         if (!text) return;
 
         addMessage(text, 'user');
         chatInput.value = '';
-        chatInput.style.height = 'auto';
-
         showTypingIndicator();
-        
+
         try {
             const response = await callGeminiAPI(text);
-            
             removeTypingIndicator();
             addMessage(response.text, 'bot');
             if (response.html) {
@@ -214,50 +109,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             removeTypingIndicator();
-            addMessage(`Dificultad técnica: ${error.message}. Por favor, verifica tu conexión o inténtalo más tarde.`, 'bot');
+            addMessage(`Error: ${error.message}. Verifica tu conexión o revisa la llave en Vercel.`, 'bot');
         }
     }
 
-    async function callGeminiAPI(userInput) {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-        
-        let promptFinal = SYSTEM_PROMPT;
-        if (USER_DATA) {
-            promptFinal += `\n\nEl nombre del docente es: ${USER_DATA.name}. Su nickname es: ${USER_DATA.nickname}. Salúdalo de forma ocasional usando su nickname.`;
-        }
+    sendBtn.onclick = handleSend;
+    chatInput.onkeypress = (e) => { if (e.key === 'Enter') handleSend(); };
 
-        // Inyectando la base de datos de PDAs y Ejes de forma Obligatoria
-        promptFinal += `\n\n========================================\nDOCUMENTO OFICIAL DEL PLAN SINTÉTICO (Fase 6)\n========================================\nSi el docente NO te proporcionó sus propios PDA o Contenidos textuales en la charla, es OBLIGATORIO que los busques y extraigas EXACTA Y TEXTUALMENTE del siguiente texto crudo que es la copia fiel del PDF del Plan Sintético. Tienes estrictamente prohibido inventarlos. Identifica la disciplina y compárala.\n\nTEXTO RAW PROGRAMA SINTETICO:\n${PROGRAMA_TEXT}\n\nSignificado de cada eje articulador (para fines de la secuencia):\n${JSON.stringify(DESCRIPCIONES_EJES, null, 2)}`;
-
-        conversationHistory.push({ role: "user", parts: [{ text: userInput }] });
-        
-        const payload = {
-            contents: [
-                { role: "user", parts: [{ text: promptFinal }] },
-                { role: "model", parts: [{ text: "Entendido, soy DidactIA y asistiré al docente de forma personalizada." }] },
-                ...conversationHistory
-            ],
-            generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 4096,
-            }
-        };
-
-        const response = await fetch(url, {
+    async function callGeminiAPI(userMessage) {
+        const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                history: conversationHistory,
+                userMessage: userMessage
+            })
         });
 
         const data = await response.json();
-        
-        if (data.error) {
-            if (data.error.message.includes("API key") || data.error.status === "PERMISSION_DENIED") {
-                const fix = confirm("⚠️ Problema con la llave de Google:\n\nTu API Key es inválida o ha sido desactivada por seguridad (leaked). ¿Quieres ingresar una nueva llave ahora?");
-                if (fix) window.updateApiKey();
-            }
-            throw new Error(data.error.message);
-        }
+        if (!response.ok) throw new Error(data.error || 'Error al conectar con el servidor');
 
         const aiOutput = data.candidates[0].content.parts[0].text;
         conversationHistory.push({ role: "model", parts: [{ text: aiOutput }] });
@@ -269,10 +139,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let cleanText = aiOutput;
         
         if (match && match[0]) {
-            finalHtml = match[0]; // Capturamos todo el bloque con su formato
+            finalHtml = match[0];
             cleanText = aiOutput.replace(planeacionRegex, '\n*(Planeación disponible en el visor derecho)*\n').trim();
         } else {
-            // Fallback por si la IA generara tablas sin el div
             const tableRegex = /<table[\s\S]*?<\/table>/gi;
             const tables = aiOutput.match(tableRegex);
             if(tables) {
@@ -293,15 +162,17 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         chatMessages.appendChild(msgDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+        if(side === 'user') conversationHistory.push({ role: "user", parts: [{ text: text }] });
     }
 
     function showTypingIndicator() {
+        if(document.getElementById('typing')) return;
         const msgDiv = document.createElement('div');
         msgDiv.className = 'message bot typing-indicator';
         msgDiv.id = 'typing';
         msgDiv.innerHTML = `
             <div class="avatar"><img src="logo.png" style="width:24px; height:24px; border-radius:4px;"></div>
-            <div class="bubble">DidactIA está pensando...</div>
+            <div class="bubble">...</div>
         `;
         chatMessages.appendChild(msgDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -321,33 +192,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Exportación a Word
     downloadBtn.addEventListener('click', () => {
         if (!currentPlanningHtml) return alert('No hay planeación para descargar.');
-        
         const preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Planeación DidactIA</title></head><body>";
         const postHtml = "</body></html>";
         const html = preHtml + currentPlanningHtml + postHtml;
-
-        const blob = new Blob(['\ufeff', html], {
-            type: 'application/msword'
-        });
-        
-        const url = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(html);
-        const filename = 'Planeacion_DidactIA.doc';
-        
-        const downloadLink = document.createElement("a");
-        document.body.appendChild(downloadLink);
-        
-        if (navigator.msSaveOrOpenBlob) {
-            navigator.msSaveOrOpenBlob(blob, filename);
-        } else {
-            downloadLink.href = url;
-            downloadLink.download = filename;
-            downloadLink.click();
-        }
-        document.body.removeChild(downloadLink);
+        const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = 'Planeacion_DidactIA.doc';
+        link.click();
+        URL.revokeObjectURL(url);
     });
 
-    finalizeBtn.addEventListener('click', () => {
-        if (!currentPlanningHtml) return alert('No hay nada que finalizar.');
-        alert('Planeación guardada con éxito.');
-    });
+    finalizeBtn.onclick = () => { if(currentPlanningHtml) downloadBtn.click(); };
+    newChatBtn.onclick = () => { conversationHistory = []; location.reload(); };
 });
