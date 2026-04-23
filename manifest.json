@@ -1,0 +1,17 @@
+{
+  "name": "DidactIA - Asistente para Docentes",
+  "short_name": "DidactIA",
+  "description": "Asistente inteligente para generar planeaciones didácticas alineadas a la Nueva Escuela Mexicana.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0F1117",
+  "theme_color": "#1C212E",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192 512x512 1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

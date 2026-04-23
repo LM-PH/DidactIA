@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Procesador del Programa Sintético</title>
+    <style>
+        body { font-family: system-ui; padding: 2rem; background: #0F1117; color: white; }
+        textarea { width: 100%; height: 60vh; background: #1C212E; color: #a5b4fc; border: 1px solid #334155; padding: 1rem; border-radius: 8px; font-family: monospace; }
+        .spinner { animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <h1>Procesador del Programa Sintético a DidactIA</h1>
+    <h3 id="status" style="color: #10b981;">Paso 1: Selecciona el PDF</h3>
+    <input type="file" id="fileInput" accept="application/pdf" style="margin-bottom: 20px; font-size: 16px;">
+    
+    <p>Estamos leyendo el PDF local utilizando la inteligencia artificial de Gemini. Por lo grande del archivo, esto puede tomar entre 1 a 3 minutos.</p>
+    <textarea id="output" readonly placeholder="Aquí aparecerá el código en JSON cuando termine la IA..."></textarea>
+    
+    <script>
+        const API_KEY = "AIzaSyBZhMRtuZ8l1Q3c-4ckg2otdshkAYbZQQQ";
+        
+        document.getElementById('fileInput').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                document.getElementById('status').innerHTML = 'Paso 2: Analizando el PDF con Inteligencia Artificial... (esto demorará unos minutos) <span class="spinner">⏳</span>';
+                
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                
+                reader.onloadend = async () => {
+                    const base64data = reader.result.split(',')[1];
+                    
+                    const payload = {
+                        contents: [{
+                            role: "user",
+                            parts: [
+                                {
+                                    text: "Extrae de este PDF oficial TODO el catálogo de 'Contenidos' y 'Procesos de Desarrollo de Aprendizaje (PDA)' de TODAS las asignaturas posibles (Español, Matemáticas, Ciencias, Biología, Historia, Geografía, etc.). Devuelve EXCLUSIVAMENTE un bloque de texto que sea JSON válido (sin etiquetas markdown, puro texto limpio) con la estructura: {\"Asignatura\": {\"Contenidos\": [{\"titulo\": \"texto del contenido\", \"PDA\": [\"texto PDA primer grado\", \"texto PDA segundo...\"]}]} }. NO omitas información. Extrae todos los PDAs. Formato final: puro JSON de diccionario a diccionario."
+                                },
+                                {
+                                    inlineData: {
+                                        mimeType: "application/pdf",
+                                        data: base64data
+                                    }
+                                }
+                            ]
+                        }],
+                        generationConfig: {
+                            temperature: 0.1,
+                        }
+                    };
+
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (data.error) throw new Error(data.error.message);
+                    
+                    document.getElementById('status').innerHTML = '✅ ¡Lectura Completada con Éxito!';
+                    
+                    let resultText = data.candidates[0].content.parts[0].text;
+                    // Limpieza de markdown
+                    if(resultText.startsWith("```json")) resultText = resultText.replace(/```json/g, '').replace(/```/g, '');
+                    if(resultText.startsWith("```")) resultText = resultText.replace(/```/g, '');
+                    
+                    document.getElementById('output').value = resultText.trim();
+                };
+            } catch (error) {
+                document.getElementById('status').innerHTML = '❌ Error técnico: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>
