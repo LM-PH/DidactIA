@@ -12,14 +12,19 @@ if ('serviceWorker' in navigator) {
 
 let USER_DATA = null;
 let PROGRAMA_TEXT = "";
+let IS_LOADED = false;
+
 fetch('programa_sintetico.txt')
     .then(r => r.text())
-    .then(text => PROGRAMA_TEXT = text)
+    .then(text => {
+        PROGRAMA_TEXT = text;
+        IS_LOADED = true;
+        console.log("Programa sintético cargado correctamente.");
+    })
     .catch(err => console.error("No se pudo cargar el programa sintético:", err));
 
-// DidactIA v6.3 - Sequential 8-Step Mode Active
+// DidactIA v6.4 - Anti-Hallucination Active
 document.addEventListener('DOMContentLoaded', () => {
-    // Referencias UI
     const authGuard = document.getElementById('auth-guard');
     const userNicknameSpan = document.getElementById('user-nickname');
     const userAvatarDiv = document.getElementById('user-avatar');
@@ -36,28 +41,30 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentPlanningHtml = '';
     let conversationHistory = [];
 
-    // Verificar Autenticación
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
             window.location.href = 'auth.html';
             return;
         }
         authGuard.style.display = 'none';
-        
         let nickname = user.displayName || user.email.split('@')[0];
         USER_DATA = { nickname, email: user.email, uid: user.uid };
-        
         userNicknameSpan.textContent = nickname;
         userAvatarDiv.textContent = nickname.charAt(0).toUpperCase();
 
         if (chatMessages.children.length === 0) {
-            addMessage(`¡Hola, ${nickname}! 👋 Soy DidactIA. Vamos a crear una planeación increíble de forma ordenada. ¿Cómo se llama tu escuela?`, 'bot');
+            addMessage(`¡Hola, ${nickname}! 👋 Soy DidactIA. Vamos a crear una planeación 100% oficial de forma ordenada.\n\nEmpecemos con el Protocolo de 8 Pasos:\n\n**1. ¿Cuál es el nombre de tu escuela?**`, 'bot');
         }
     });
 
     logoutBtn.onclick = () => signOut(auth);
 
     async function handleSend() {
+        if (!IS_LOADED) {
+            addMessage("Aún estoy cargando mis bases de datos oficiales. Por favor espera 3 segundos...", 'bot');
+            return;
+        }
+
         const text = chatInput.value.trim();
         if (!text) return;
 
