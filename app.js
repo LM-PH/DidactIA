@@ -17,7 +17,7 @@ fetch('programa_sintetico.txt')
     .then(text => PROGRAMA_TEXT = text)
     .catch(err => console.error("No se pudo cargar el programa sintético:", err));
 
-// DidactIA v6.1 - Next Gen AI Bridge (Gemini 2.5)
+// DidactIA v6.2 - Brain Upgrade
 document.addEventListener('DOMContentLoaded', () => {
     // Referencias UI
     const authGuard = document.getElementById('auth-guard');
@@ -42,56 +42,21 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = 'auth.html';
             return;
         }
-
         authGuard.style.display = 'none';
-
-        // Lógica de Perfil v5.8 (Silent)
-        let nickname = user.displayName;
-        const localNick = localStorage.getItem(`nick_${user.uid}`);
-
-        const cleanName = (str) => {
-            if (!str) return 'Docente';
-            return str.split('@')[0].split('.')[0].split('_')[0];
-        };
-
-        if (!nickname) {
-            nickname = localNick || cleanName(user.email);
-        }
-
-        if (nickname.includes('@') || nickname.includes('_')) {
-            nickname = cleanName(nickname);
-        }
-
-        nickname = nickname.charAt(0).toUpperCase() + nickname.slice(1);
-        const name = localStorage.getItem(`name_${user.uid}`) || nickname;
-        USER_DATA = { nickname, name };
+        
+        let nickname = user.displayName || user.email.split('@')[0];
+        USER_DATA = { nickname, email: user.email, uid: user.uid };
         
         userNicknameSpan.textContent = nickname;
         userAvatarDiv.textContent = nickname.charAt(0).toUpperCase();
 
-        const vTag = document.getElementById('version-tag') || document.createElement('div');
-        vTag.id = 'version-tag';
-        vTag.style = "position:fixed; bottom:5px; right:12px; font-size:10px; color:rgba(255,255,255,0.3); z-index:100;";
-        vTag.textContent = "DidactIA v5.8 (Vercel Secure Mode)";
-        document.body.appendChild(vTag);
-
-        userChip.onclick = async () => {
-            const newNick = prompt("Cambiar mi nombre de docente:", nickname);
-            if (newNick && newNick !== nickname) {
-                await updateProfile(auth.currentUser, { displayName: newNick });
-                localStorage.setItem(`nick_${user.uid}`, newNick);
-                location.reload();
-            }
-        };
-
         if (chatMessages.children.length === 0) {
-            addMessage(`¡Hola, ${nickname}! 👋 Soy DidactIA. ¿En qué vamos a trabajar hoy?`, 'bot');
+            addMessage(`¡Hola, ${nickname}! 👋 Soy DidactIA. Vamos a crear una planeación increíble de forma ordenada. ¿Cómo se llama tu escuela?`, 'bot');
         }
     });
 
     logoutBtn.onclick = () => signOut(auth);
 
-    // Lógica del Chat
     async function handleSend() {
         const text = chatInput.value.trim();
         if (!text) return;
@@ -109,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             removeTypingIndicator();
-            addMessage(`Error: ${error.message}. Verifica tu conexión o revisa la llave en Vercel.`, 'bot');
+            addMessage(`Error: ${error.message}`, 'bot');
         }
     }
 
@@ -122,12 +87,17 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 history: conversationHistory,
-                userMessage: userMessage
+                userMessage: userMessage,
+                userData: USER_DATA,
+                pedagogicalData: {
+                    programaText: PROGRAMA_TEXT,
+                    ejes: DESCRIPCIONES_EJES
+                }
             })
         });
 
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Error al conectar con el servidor');
+        if (!response.ok) throw new Error(data.error || 'Error de conexión');
 
         const aiOutput = data.candidates[0].content.parts[0].text;
         conversationHistory.push({ role: "model", parts: [{ text: aiOutput }] });
@@ -189,9 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
         contentViewer.innerHTML = html;
     }
 
-    // Exportación a Word
     downloadBtn.addEventListener('click', () => {
-        if (!currentPlanningHtml) return alert('No hay planeación para descargar.');
+        if (!currentPlanningHtml) return alert('No hay planeación cargada.');
         const preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Planeación DidactIA</title></head><body>";
         const postHtml = "</body></html>";
         const html = preHtml + currentPlanningHtml + postHtml;
