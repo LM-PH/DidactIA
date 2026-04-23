@@ -88,58 +88,60 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // --- LÓGICA DE RECUPERACIÓN DE NICKNAME MEJORADA (v5.1) ---
+        // --- LÓGICA DE PERFIL DIDACTIA v5.2 ---
         let nickname = user.displayName;
         const localNick = localStorage.getItem(`nick_${user.uid}`);
 
-        // Si tenemos nickname local pero el de la nube está vacío, sincronizar.
-        if (!nickname && localNick) {
-            try {
-                await updateProfile(user, { displayName: localNick });
-                nickname = localNick;
-            } catch (e) { console.error("Error sincronizando perfil:", e); }
-        }
+        // Función para limpiar correos
+        const clean = (str) => {
+            if (!str) return 'Docente';
+            return str.split('@')[0].split('.')[0].split('_')[0]; // Muy agresivo: luis.ponce -> Luis
+        };
 
-        // Si sigue el correo o está vacío, procedemos a limpiar
+        // Si el perfil está vacío o es un correo, forzar actualización una vez
         if (!nickname || nickname.includes('@')) {
-            nickname = localNick || (user.email ? user.email.split('@')[0] : 'Docente');
+            console.log("Perfil incompleto detectado.");
+            nickname = localNick || clean(user.email);
         }
 
-        // REGLA DE EMERGENCIA ABSOLUTA: Eliminar cualquier rastro de correo
-        if (nickname && nickname.includes('@')) {
-            nickname = nickname.split('@')[0];
-        }
-        
-        // Formatear: capitalizar la primera letra si es un nombre corto
-        nickname = nickname.charAt(0).toUpperCase() + nickname.slice(1);
-        
         const name = localStorage.getItem(`name_${user.uid}`) || nickname;
         USER_DATA = { nickname, name };
         
         userNicknameSpan.textContent = nickname;
         userAvatarDiv.textContent = nickname.charAt(0).toUpperCase();
 
-        // Agregar etiqueta de versión en el UI para confirmar actualización
-        const versionLabel = document.createElement('div');
-        versionLabel.style = "position:absolute; bottom:10px; left:10px; font-size:10px; color:gray; opacity:0.5;";
-        versionLabel.textContent = "v5.1 - Cloud Sync Active";
-        document.querySelector('.chat-section').appendChild(versionLabel);
+        // Etiqueta de versión para control
+        const vTag = document.getElementById('version-tag') || document.createElement('div');
+        vTag.id = 'version-tag';
+        vTag.style = "position:fixed; bottom:5px; right:12px; font-size:10px; color:rgba(255,255,255,0.3); z-index:100;";
+        vTag.textContent = "DidactIA v5.2 (Cloud Profile Fix)";
+        document.body.appendChild(vTag);
 
-        // Permitir cambiar el nickname si no le gusta (haciendo clic en su nombre)
+        // Si el nombre sigue pareciéndose a un correo o es muy genérico, preguntar al docente
+        if (nickname.length < 2 || nickname.includes('.') || (user.displayName === null && !localStorage.getItem('profile_verified'))) {
+            const realName = prompt("¡Bienvenido a DidactIA! ¿Cómo quieres que te llame el asistente? (Ej: Profe Luis, Maestra Elena...)", nickname);
+            if (realName) {
+                await updateProfile(user, { displayName: realName });
+                localStorage.setItem(`nick_${user.uid}`, realName);
+                localStorage.setItem('profile_verified', 'true');
+                location.reload();
+                return;
+            }
+        }
+
+        // Permitir cambiar el nickname haciendo clic
         userChip.onclick = async () => {
-            const newNick = prompt("¿Cómo quieres que DidactIA te llame?", nickname);
+            const newNick = prompt("Cambiar mi nombre de docente:", nickname);
             if (newNick && newNick !== nickname) {
-                try {
-                    await updateProfile(auth.currentUser, { displayName: newNick });
-                    localStorage.setItem(`nick_${user.uid}`, newNick);
-                    location.reload();
-                } catch (e) { alert("No se pudo actualizar el nombre."); }
+                await updateProfile(auth.currentUser, { displayName: newNick });
+                localStorage.setItem(`nick_${user.uid}`, newNick);
+                location.reload();
             }
         };
-        
-        // Mostrar saludo inicial personalizado si no hay mensajes
+
+        // Mostrar saludo inicial
         if (chatMessages.children.length === 0) {
-            addMessage(`¡Hola, ${nickname}! 👋 Soy DidactIA, tu asistente de planeación. ¿En qué asignatura o tema trabajaremos hoy?`, 'bot');
+            addMessage(`¡Excelente día, ${nickname}! 👋 Soy DidactIA. ¿Qué asignatura o tema vamos a planear hoy?`, 'bot');
         }
 
         // Quitar el protector de carga
