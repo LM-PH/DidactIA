@@ -211,10 +211,7 @@
         const password = document.getElementById('login-password').value;
         try {
             const userCred = await signInWithEmailAndPassword(auth, email, password);
-            // Intentar recuperar nickname localmente o poner uno por defecto
-            if (!localStorage.getItem(`nick_${userCred.user.uid}`)) {
-                localStorage.setItem(`nick_${userCred.user.uid}`, email.split('@')[0]);
-            }
+            // No seteamos nada localmente aquí; dejaremos que index.html recupere el displayName real de la nube
             showMessage('success', '✅ ¡Bienvenido! Entrando a DidactIA...');
             setTimeout(() => window.location.href = 'index.html', 1000);
         } catch (err) {
