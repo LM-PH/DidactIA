@@ -10,7 +10,23 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.error("Error al registrar SW:", err));
 }
 
-const API_KEY = "AIzaSyBZhMRtuZ8l1Q3c-4ckg2otdshkAYbZQQQ";
+// Recuperar API_KEY de localStorage o pedirla si no existe
+let API_KEY = localStorage.getItem('GEMINI_API_KEY') || "";
+
+// Función para actualizar la API Key si es necesario
+window.updateApiKey = () => {
+    const newKey = prompt("Configuración de Seguridad: Ingresa tu API Key de Gemini (se guardará solo en este navegador):", API_KEY);
+    if (newKey) {
+        localStorage.setItem('GEMINI_API_KEY', newKey);
+        API_KEY = newKey;
+        location.reload();
+    }
+};
+
+// Si no hay llave, avisar al usuario sutilmente
+if (!API_KEY) {
+    console.warn("No se detectó API Key de Gemini. El chatbot no podrá responder.");
+}
 let USER_DATA = null;
 
 let PROGRAMA_TEXT = "";
@@ -235,7 +251,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const data = await response.json();
         
-        if (data.error) throw new Error(data.error.message);
+        if (data.error) {
+            if (data.error.message.includes("API key") || data.error.status === "PERMISSION_DENIED") {
+                const fix = confirm("⚠️ Problema con la llave de Google:\n\nTu API Key es inválida o ha sido desactivada por seguridad (leaked). ¿Quieres ingresar una nueva llave ahora?");
+                if (fix) window.updateApiKey();
+            }
+            throw new Error(data.error.message);
+        }
 
         const aiOutput = data.candidates[0].content.parts[0].text;
         conversationHistory.push({ role: "model", parts: [{ text: aiOutput }] });
