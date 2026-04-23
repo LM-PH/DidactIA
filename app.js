@@ -91,8 +91,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Recuperar datos de localStorage (ya que Firestore requiere Billing)
-        const nickname = localStorage.getItem(`nick_${user.uid}`) || 'Docente';
+        // Recuperar datos de Firebase central (prioridad) o localStorage
+        let nickname = user.displayName;
+        if (!nickname) {
+            nickname = localStorage.getItem(`nick_${user.uid}`);
+            if (!nickname) {
+                // Si todo falla, mostrar la primera parte del correo (ej. luis.ponce)
+                nickname = user.email ? user.email.split('@')[0] : 'Docente';
+            }
+        }
+        
         const name = localStorage.getItem(`name_${user.uid}`) || nickname;
         
         USER_DATA = { nickname, name };

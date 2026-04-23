@@ -107,7 +107,8 @@
     import { 
         createUserWithEmailAndPassword, 
         signInWithEmailAndPassword,
-        onAuthStateChanged
+        onAuthStateChanged,
+        updateProfile
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -240,7 +241,13 @@
         const password = document.getElementById('reg-password').value;
         try {
             const userCred = await createUserWithEmailAndPassword(auth, email, password);
-            // Guardamos el perfil localmente en lugar de Firestore para evitar errores de Billing
+            
+            // Guardamos el perfil en el sistema central de Firebase
+            await updateProfile(userCred.user, {
+                displayName: nickname
+            });
+
+            // Guardamos localmente para este navegador
             localStorage.setItem(`nick_${userCred.user.uid}`, nickname);
             localStorage.setItem(`name_${userCred.user.uid}`, name);
             
