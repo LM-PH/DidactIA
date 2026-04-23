@@ -92,9 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let nickname = user.displayName;
         const localNick = localStorage.getItem(`nick_${user.uid}`);
 
-        // Si tenemos nickname local pero el de la nube está vacío (caso de usuarios viejos), sincronizar.
+        // Si tenemos nickname local pero el de la nube está vacío, sincronizar.
         if (!nickname && localNick) {
-            console.log("Sincronizando nickname local a la nube...");
             try {
                 await updateProfile(user, { displayName: localNick });
                 nickname = localNick;
@@ -104,6 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Si sigue vacío, usar el local o el prefijo del correo
         if (!nickname) {
             nickname = localNick || (user.email ? user.email.split('@')[0] : 'Docente');
+        }
+
+        // REGLA DE EMERGENCIA: Si por alguna razón el nickname sigue pareciendo un correo, limpiarlo.
+        if (nickname && nickname.includes('@')) {
+            nickname = nickname.split('@')[0];
         }
         
         const name = localStorage.getItem(`name_${user.uid}`) || nickname;
