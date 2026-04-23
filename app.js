@@ -1,5 +1,5 @@
 import { auth, db } from './firebase-config.js';
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { CONOCIMIENTO_NEM, DESCRIPCIONES_EJES } from './pedagogia.js';
 
@@ -58,14 +58,10 @@ Genera la planeación ÚNICAMENTE con esta estructura:
 6. ADECUACIONES (Tabla HTML)
 7. VINCULACIÓN INTERDISCIPLINARIA (Tabla HTML)
 
-========================================
-REGLAS DE GENERACIÓN
-========================================
-- ENCIERRA TODA LA PLANEACIÓN dentro de una etiqueta <div id="planeacion-oficial"> ... </div>. Esto es OBLIGATORIO para que el sistema reconozca la planeación.
-- Incluye los títulos de las secciones usando etiquetas <h3> dentro del div, seguidos de su respectiva tabla.
-- Usa formato HTML con <table>, <tr>, <th>, <td>.
-- Actividades concretas y aplicables en el aula.
-- Integra el enfoque sociocrítico.`;
+REGLAS DE SALIDA:
+- Usa etiquetas <table>, <tr>, <th> y <td> para todas las tablas.
+- Asegúrate de que TODA la respuesta esté dentro de <div id="planeacion-oficial"> ... </div>. Esto es vital para el visor lateral.
+- Puedes agregar texto explicativo o saludos FUERA del div de la planeación.`;
 
 document.addEventListener('DOMContentLoaded', () => {
     // Referencias UI
@@ -80,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadBtn = document.getElementById('download-btn');
     const finalizeBtn = document.getElementById('finalizar-btn');
     const newChatBtn = document.getElementById('new-chat-btn');
+    const userChip = document.getElementById('user-chip');
 
     let currentPlanningHtml = '';
     let conversationHistory = [];
@@ -91,22 +88,41 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Recuperar datos de Firebase central (prioridad) o localStorage
+        // --- LÓGICA DE RECUPERACIÓN DE NICKNAME MEJORADA ---
         let nickname = user.displayName;
+        const localNick = localStorage.getItem(`nick_${user.uid}`);
+
+        // Si tenemos nickname local pero el de la nube está vacío (caso de usuarios viejos), sincronizar.
+        if (!nickname && localNick) {
+            console.log("Sincronizando nickname local a la nube...");
+            try {
+                await updateProfile(user, { displayName: localNick });
+                nickname = localNick;
+            } catch (e) { console.error("Error sincronizando perfil:", e); }
+        }
+
+        // Si sigue vacío, usar el local o el prefijo del correo
         if (!nickname) {
-            nickname = localStorage.getItem(`nick_${user.uid}`);
-            if (!nickname) {
-                // Si todo falla, mostrar la primera parte del correo (ej. luis.ponce)
-                nickname = user.email ? user.email.split('@')[0] : 'Docente';
-            }
+            nickname = localNick || (user.email ? user.email.split('@')[0] : 'Docente');
         }
         
         const name = localStorage.getItem(`name_${user.uid}`) || nickname;
-        
         USER_DATA = { nickname, name };
         
         userNicknameSpan.textContent = nickname;
         userAvatarDiv.textContent = nickname.charAt(0).toUpperCase();
+
+        // Permitir cambiar el nickname si no le gusta (haciendo clic en su nombre)
+        userChip.onclick = async () => {
+            const newNick = prompt("¿Cómo quieres que DidactIA te llame?", nickname);
+            if (newNick && newNick !== nickname) {
+                try {
+                    await updateProfile(auth.currentUser, { displayName: newNick });
+                    localStorage.setItem(`nick_${user.uid}`, newNick);
+                    location.reload();
+                } catch (e) { alert("No se pudo actualizar el nombre."); }
+            }
+        };
         
         // Mostrar saludo inicial personalizado si no hay mensajes
         if (chatMessages.children.length === 0) {
