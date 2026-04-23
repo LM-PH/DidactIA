@@ -17,7 +17,7 @@ fetch('programa_sintetico.txt')
     .then(text => PROGRAMA_TEXT = text)
     .catch(err => console.error("No se pudo cargar el programa sintético:", err));
 
-// DidactIA v5.8 - Vercel Tunnel Active
+// DidactIA v5.9 - Vercel Tunnel Active (Forced Redeploy)
 document.addEventListener('DOMContentLoaded', () => {
     // Referencias UI
     const authGuard = document.getElementById('auth-guard');
