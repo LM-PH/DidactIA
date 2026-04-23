@@ -23,7 +23,7 @@ fetch('programa_sintetico.txt')
     })
     .catch(err => console.error("No se pudo cargar el programa sintético:", err));
 
-// DidactIA v6.4 - Anti-Hallucination Active
+// DidactIA v6.5 - No Context/Prob Mode Active
 document.addEventListener('DOMContentLoaded', () => {
     const authGuard = document.getElementById('auth-guard');
     const userNicknameSpan = document.getElementById('user-nickname');
