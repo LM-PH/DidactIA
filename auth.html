@@ -250,6 +250,15 @@
                 displayName: nickname
             });
 
+            // Guardamos en Firestore para que el Admin pueda verlos
+            await setDoc(doc(db, "usuarios", userCred.user.uid), {
+                nombre: name,
+                nickname: nickname,
+                email: email,
+                fechaRegistro: new Date().toISOString(),
+                uid: userCred.user.uid
+            });
+
             // Guardamos localmente para este navegador
             localStorage.setItem(`nick_${userCred.user.uid}`, nickname);
             localStorage.setItem(`name_${userCred.user.uid}`, name);

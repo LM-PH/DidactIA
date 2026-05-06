@@ -47,6 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         authGuard.style.display = 'none';
+        
+        // Mostrar botón admin si es el correo autorizado
+        if (user.email === "zlagustin10@gmail.com") {
+            const adminBtn = document.getElementById('admin-link');
+            if (adminBtn) adminBtn.style.display = 'flex';
+        }
+
         let nickname = user.displayName || user.email.split('@')[0];
         USER_DATA = { nickname, email: user.email, uid: user.uid };
         userNicknameSpan.textContent = nickname;
@@ -104,7 +111,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Error de conexión');
+        if (!response.ok) {
+            const errorMsg = data.error?.message || data.error || 'Error de conexión';
+            throw new Error(errorMsg);
+        }
+
+        if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+            throw new Error("Respuesta incompleta de la IA. Por favor intenta de nuevo.");
+        }
 
         const aiOutput = data.candidates[0].content.parts[0].text;
         conversationHistory.push({ role: "model", parts: [{ text: aiOutput }] });

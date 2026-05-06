@@ -3,7 +3,9 @@ import time
 import json
 import google.generativeai as genai
 
-apikey = "AIzaSyBZhMRtuZ8l1Q3c-4ckg2otdshkAYbZQQQ"
+# Configura tu API Key como variable de entorno o búscala de forma segura
+import os
+apikey = os.environ.get("GEMINI_API_KEY", "") 
 genai.configure(api_key=apikey)
 
 print("Subiendo el PDF a la memoria de Gemini...")

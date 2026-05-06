@@ -5,6 +5,10 @@ export default async function handler(req, res) {
     const { history, userMessage, pedagogicalData, userData } = req.body;
     const API_KEY = process.env.GEMINI_API_KEY;
 
+    if (!API_KEY) {
+        return res.status(500).json({ error: 'La clave de API (GEMINI_API_KEY) no está configurada en el servidor.' });
+    }
+
     const SYSTEM_PROMPT = `Actúa como DidactIA, asistente experto en NEM (México).
 
 ========================================
@@ -38,7 +42,7 @@ BASE DE DATOS (PROGRAMA SINTÉTICO)
 ${pedagogicalData?.programaText || 'Cargando...'}
 ${JSON.stringify(pedagogicalData?.ejes || {})}`;
 
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
     const payload = {
         contents: [
             { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
@@ -56,6 +60,15 @@ ${JSON.stringify(pedagogicalData?.ejes || {})}`;
             body: JSON.stringify(payload)
         });
         const data = await response.json();
+        
+        if (!response.ok) {
+            return res.status(response.status).json(data);
+        }
+        
+        if (!data.candidates || data.candidates.length === 0) {
+            return res.status(500).json({ error: 'La IA no devolvió ninguna respuesta. Revisa si hay filtros de seguridad activos.' });
+        }
+
         res.status(200).json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });

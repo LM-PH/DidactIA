@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DidactIA - Panel Administrativo</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background: #0F1117; color: white; font-family: 'Inter', sans-serif; }
+        .admin-container { max-width: 1000px; margin: 40px auto; padding: 20px; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .user-table { width: 100%; border-collapse: collapse; background: #1C212E; border-radius: 12px; overflow: hidden; }
+        .user-table th, .user-table td { padding: 15px; text-align: left; border-bottom: 1px solid #334155; }
+        .user-table th { background: #2D3748; color: #94A3B8; font-size: 13px; text-transform: uppercase; }
+        .user-table tr:hover { background: #262F40; }
+        .delete-btn { background: #EF4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .delete-btn:hover { background: #DC2626; transform: scale(1.05); }
+        .back-btn { background: #4F6EF7; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .loading-spinner { text-align: center; padding: 50px; font-size: 18px; color: #6366f1; }
+        .empty-state { text-align: center; padding: 40px; color: #94A3B8; }
+    </style>
+</head>
+<body>
+
+<div class="admin-container">
+    <div class="admin-header">
+        <div>
+            <h1>Panel de Control DidactIA</h1>
+            <p style="color: #94A3B8;">Gestión de usuarios registrados</p>
+        </div>
+        <a href="index.html" class="back-btn">← Volver al Chat</a>
+    </div>
+
+    <div id="admin-content">
+        <div class="loading-spinner">Cargando usuarios...</div>
+    </div>
+</div>
+
+<script type="module">
+    import { auth, db } from './firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { collection, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const ADMIN_EMAIL = "zlagustin10@gmail.com";
+    const contentDiv = document.getElementById('admin-content');
+
+    onAuthStateChanged(auth, async (user) => {
+        if (!user || user.email !== ADMIN_EMAIL) {
+            alert("No tienes permisos para acceder a esta pantalla.");
+            window.location.href = 'index.html';
+            return;
+        }
+        loadUsers();
+    });
+
+    async function loadUsers() {
+        try {
+            const q = query(collection(db, "usuarios"), orderBy("fechaRegistro", "desc"));
+            const querySnapshot = await getDocs(q);
+            
+            if (querySnapshot.empty) {
+                contentDiv.innerHTML = '<div class="empty-state">No hay usuarios registrados en la base de datos.</div>';
+                return;
+            }
+
+            let html = `
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Nickname</th>
+                            <th>Email</th>
+                            <th>Fecha Registro</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const fecha = data.fechaRegistro ? new Date(data.fechaRegistro).toLocaleDateString() : 'N/A';
+                html += `
+                    <tr id="row-${doc.id}">
+                        <td>${data.nombre || 'N/A'}</td>
+                        <td>${data.nickname || 'N/A'}</td>
+                        <td>${data.email}</td>
+                        <td>${fecha}</td>
+                        <td>
+                            <button class="delete-btn" onclick="confirmDelete('${doc.id}', '${data.email}')">Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            contentDiv.innerHTML = html;
+
+        } catch (error) {
+            console.error("Error cargando usuarios:", error);
+            contentDiv.innerHTML = `<div class="empty-state">Error al cargar datos: ${error.message}</div>`;
+        }
+    }
+
+    window.confirmDelete = async (uid, email) => {
+        if (email === ADMIN_EMAIL) return alert("No puedes eliminar la cuenta de administrador.");
+        
+        if (confirm(`¿Estás seguro de que deseas eliminar al usuario ${email}? Esta acción no se puede deshacer de Firestore.`)) {
+            try {
+                await deleteDoc(doc(db, "usuarios", uid));
+                document.getElementById(`row-${uid}`).remove();
+                alert("Usuario eliminado correctamente de Firestore.");
+            } catch (error) {
+                alert("Error al eliminar: " + error.message);
+            }
+        }
+    };
+</script>
+
+</body>
+</html>

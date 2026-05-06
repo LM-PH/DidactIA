@@ -19,7 +19,8 @@
     <textarea id="output" readonly placeholder="Aquí aparecerá el código en JSON cuando termine la IA..."></textarea>
     
     <script>
-        const API_KEY = "AIzaSyBZhMRtuZ8l1Q3c-4ckg2otdshkAYbZQQQ";
+        // IMPORTANTE: No hardcodear la API Key. Se recomienda usar un backend o variables de entorno.
+        const API_KEY = ""; // Borrada por seguridad. Genera una nueva en Google AI Studio.
         
         document.getElementById('fileInput').addEventListener('change', async (event) => {
             const file = event.target.files[0];
@@ -65,6 +66,10 @@
                     if (data.error) throw new Error(data.error.message);
                     
                     document.getElementById('status').innerHTML = '✅ ¡Lectura Completada con Éxito!';
+                    
+                    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+                        throw new Error("La IA no devolvió el formato esperado o fue bloqueada por filtros de seguridad.");
+                    }
                     
                     let resultText = data.candidates[0].content.parts[0].text;
                     // Limpieza de markdown
