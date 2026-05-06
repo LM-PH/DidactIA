@@ -97,6 +97,11 @@
 
         <div class="auth-footer">
             <p>Al registrarte, aceptas usar esta herramienta con fines educativos 📚</p>
+            <div style="margin-top: 15px; border-top: 1px solid #334155; padding-top: 15px;">
+                <button onclick="adminQuickLogin()" style="background:transparent; border:1px solid #6366f1; color:#6366f1; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:12px; transition:0.3s;">
+                    🔐 Acceso Administrativo
+                </button>
+            </div>
         </div>
 
     </div>
@@ -165,6 +170,13 @@
         input.value = pwd;
         input.type = 'text';
         showMessage('success', `✅ Contraseña "${pwd}" aplicada. ¡Guárdala en un lugar seguro!`);
+    };
+
+    window.adminQuickLogin = () => {
+        switchTab('login');
+        document.getElementById('login-email').value = "zlagustin10@gmail.com";
+        document.getElementById('login-password').focus();
+        showMessage('info', '📧 Email de administrador configurado. Ingresa tu contraseña.');
     };
 
     window.generateNickname = (fullName) => {
