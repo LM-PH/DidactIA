@@ -174,9 +174,9 @@
 
     window.adminQuickLogin = () => {
         switchTab('login');
-        document.getElementById('login-email').value = "zlagustin10@gmail.com";
-        document.getElementById('login-password').focus();
-        showMessage('info', '📧 Email de administrador configurado. Ingresa tu contraseña.');
+        document.getElementById('login-email').value = "";
+        document.getElementById('login-email').focus();
+        showMessage('info', 'Por favor, ingresa tus credenciales de administrador.');
     };
 
     window.generateNickname = (fullName) => {
