@@ -314,9 +314,10 @@
                     fechaRegistro: new Date().toISOString(),
                     uid: userCred.user.uid
                 });
+                console.log("✅ Usuario guardado en Firestore");
             } catch (fsErr) {
-                console.error("Error al guardar en Firestore:", fsErr);
-                // Si falla Firestore, al menos lo intentamos de nuevo o avisamos
+                console.error("❌ Error Firestore:", fsErr);
+                alert("⚠️ Error crítico: Tu cuenta se creó pero no se pudo registrar en el panel de control. Por favor, informa al administrador. Error: " + fsErr.message);
             }
 
             // Guardamos localmente para este navegador
