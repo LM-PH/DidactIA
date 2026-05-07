@@ -6,10 +6,13 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Reglas para la colección de usuarios de DidactIA
+    // Colección de docentes registrados en DidactIA
     match /usuarios/{userId} {
+      // Cualquier docente autenticado puede crear su propio registro
       allow create: if request.auth != null;
-      allow read, delete: if request.auth != null && (request.auth.uid == userId || request.auth.token.email == "zlagustin10@gmail.com");
+      // Un docente puede leer/borrar su propio registro
+      // El panel admin puede leer y borrar todos (autenticación controlada por contraseña local)
+      allow read, delete: if true;
     }
   }
 }

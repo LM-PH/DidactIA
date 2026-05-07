@@ -174,18 +174,27 @@
     import { db } from './firebase-config.js';
     import { collection, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // ── CONTRASEÑA ADMIN (solo local, no se sube a Firebase) ──
-    const ADMIN_PASSWORD = "DidactIA_Admin_2026!";
+    // ── HASH SHA-256 de la contraseña (la contraseña real no aparece en el código) ──
+    const ADMIN_HASH = "3a3cd7dfd12e7429e15f7714d55e1bd587e63d5c46e770f960f3d04aff7a296a";
     const SESSION_KEY = "didactia_admin_session";
+
+    async function hashPassword(pwd) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(pwd);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(hashBuffer))
+            .map(b => b.toString(16).padStart(2, '0')).join('');
+    }
 
     // Revisar si ya hay sesión activa
     if (sessionStorage.getItem(SESSION_KEY) === "true") {
         showPanel();
     }
 
-    window.checkAdminLogin = () => {
+    window.checkAdminLogin = async () => {
         const pwd = document.getElementById('admin-pwd').value;
-        if (pwd === ADMIN_PASSWORD) {
+        const hash = await hashPassword(pwd);
+        if (hash === ADMIN_HASH) {
             sessionStorage.setItem(SESSION_KEY, "true");
             showPanel();
         } else {
