@@ -5,7 +5,7 @@ import { CONOCIMIENTO_NEM, DESCRIPCIONES_EJES } from './pedagogia.js';
 
 // Registrar PWA Service Worker
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=7.0')
+    navigator.serviceWorker.register('./sw.js?v=7.1')
       .then(() => console.log("PWA Service Worker Registrado"))
       .catch(err => console.error("Error al registrar SW:", err));
 }
