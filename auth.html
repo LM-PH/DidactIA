@@ -59,6 +59,11 @@
                 <span class="btn-text">Iniciar Sesión →</span>
                 <div class="spinner"></div>
             </button>
+            <div style="text-align: center; margin-top: 15px;">
+                <button type="button" onclick="handleResetPassword()" style="background:none; border:none; color:#94A3B8; font-size:12px; text-decoration:underline; cursor:pointer;">
+                    ¿Olvidaste tu contraseña?
+                </button>
+            </div>
         </form>
 
         <!-- Formulario Registro -->
@@ -115,7 +120,8 @@
         onAuthStateChanged,
         updateProfile,
         setPersistence,
-        browserSessionPersistence
+        browserSessionPersistence,
+        sendPasswordResetEmail
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -216,6 +222,20 @@
         btn.classList.toggle('loading', loading);
         btn.disabled = loading;
     }
+
+    window.handleResetPassword = async () => {
+        const email = document.getElementById('login-email').value.trim();
+        if (!email) {
+            return showMessage('error', '⚠️ Por favor, ingresa tu correo para enviarte el enlace de recuperación.');
+        }
+        try {
+            await sendPasswordResetEmail(auth, email);
+            showMessage('success', '📧 ¡Enviado! Revisa tu bandeja de entrada (y la carpeta de Spam).');
+        } catch (err) {
+            console.error(err);
+            showMessage('error', '⚠️ Error: ' + err.message);
+        }
+    };
 
     window.handleLogin = async (e) => {
         e.preventDefault();
