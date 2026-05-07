@@ -254,9 +254,25 @@
     }
 
     window.removeUser = async (uid, email) => {
-        if (!confirm(`¿Eliminar a ${email} de la lista? Esta acción no se puede deshacer.`)) return;
+        if (!confirm(`¿Eliminar a ${email} completamente? Se borrará de Firestore y de Firebase Authentication (ya no podrá entrar a la app).`)) return;
+
+        // Pedir la contraseña para confirmar la operación
+        const pwd = prompt("Confirma tu contraseña de administrador:");
+        if (!pwd) return;
+
         try {
-            await deleteDoc(doc(db, "usuarios", uid));
+            const res = await fetch('/api/delete-user', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ uid, adminPassword: pwd })
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                return alert('Error: ' + (data.error || 'No se pudo eliminar'));
+            }
+
+            // Quitar la fila de la tabla
             document.getElementById(`row-${uid}`)?.remove();
             const count = document.querySelectorAll('#users-body tr').length;
             document.getElementById('user-count').textContent = count;
@@ -264,8 +280,9 @@
                 document.getElementById('users-table').style.display = 'none';
                 document.getElementById('no-users').style.display = 'block';
             }
+            alert(`✅ ${email} eliminado correctamente de Auth y Firestore.`);
         } catch (err) {
-            alert('Error al eliminar: ' + err.message);
+            alert('Error de conexión: ' + err.message);
         }
     };
 </script>
