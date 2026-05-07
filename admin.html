@@ -4,115 +4,259 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DidactIA - Panel Administrativo</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { background: #0F1117; color: white; font-family: 'Inter', sans-serif; }
-        .admin-container { max-width: 1000px; margin: 40px auto; padding: 20px; }
-        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .user-table { width: 100%; border-collapse: collapse; background: #1C212E; border-radius: 12px; overflow: hidden; }
-        .user-table th, .user-table td { padding: 15px; text-align: left; border-bottom: 1px solid #334155; }
-        .user-table th { background: #2D3748; color: #94A3B8; font-size: 13px; text-transform: uppercase; }
-        .user-table tr:hover { background: #262F40; }
-        .delete-btn { background: #EF4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: 0.2s; }
-        .delete-btn:hover { background: #DC2626; transform: scale(1.05); }
-        .back-btn { background: #4F6EF7; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; }
-        .loading-spinner { text-align: center; padding: 50px; font-size: 18px; color: #6366f1; }
-        .empty-state { text-align: center; padding: 40px; color: #94A3B8; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0F1117; color: white; font-family: 'Inter', sans-serif; min-height: 100vh; }
+
+        /* ── LOGIN OVERLAY ── */
+        #login-overlay {
+            position: fixed; inset: 0;
+            background: #0F1117;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100;
+        }
+        .login-card {
+            background: #1C212E;
+            border: 1px solid #2D3748;
+            border-radius: 16px;
+            padding: 40px;
+            width: 360px;
+            text-align: center;
+        }
+        .login-card img { width: 52px; border-radius: 12px; margin-bottom: 16px; }
+        .login-card h2 { font-size: 20px; margin-bottom: 6px; }
+        .login-card p { color: #64748B; font-size: 14px; margin-bottom: 28px; }
+        .login-input {
+            width: 100%; padding: 12px 16px;
+            background: #0F1117; border: 1px solid #334155;
+            border-radius: 8px; color: white; font-size: 14px;
+            margin-bottom: 16px; outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .login-input:focus { border-color: #6366f1; }
+        .login-btn {
+            width: 100%; padding: 13px;
+            background: linear-gradient(135deg, #6366f1, #4F6EF7);
+            border: none; border-radius: 8px;
+            color: white; font-size: 15px; font-weight: 600;
+            cursor: pointer; transition: 0.2s;
+        }
+        .login-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .login-error {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #FCA5A5; padding: 10px; border-radius: 8px;
+            font-size: 13px; margin-bottom: 14px; display: none;
+        }
+
+        /* ── PANEL ── */
+        #admin-panel { display: none; }
+        .admin-header {
+            background: #1C212E;
+            border-bottom: 1px solid #2D3748;
+            padding: 16px 32px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .admin-header-left { display: flex; align-items: center; gap: 12px; }
+        .admin-header-left img { width: 36px; border-radius: 8px; }
+        .admin-header-left h1 { font-size: 18px; }
+        .admin-header-left span { color: #64748B; font-size: 13px; }
+        .header-actions { display: flex; gap: 10px; }
+        .btn-back {
+            background: transparent; border: 1px solid #334155;
+            color: #94A3B8; padding: 8px 16px; border-radius: 8px;
+            cursor: pointer; font-size: 13px; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-logout {
+            background: transparent; border: 1px solid #EF4444;
+            color: #EF4444; padding: 8px 16px; border-radius: 8px;
+            cursor: pointer; font-size: 13px;
+        }
+        .admin-body { max-width: 1000px; margin: 40px auto; padding: 0 24px; }
+        .stats-bar {
+            background: #1C212E; border: 1px solid #2D3748;
+            border-radius: 12px; padding: 20px 24px;
+            display: flex; align-items: center; gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-num { font-size: 32px; font-weight: 700; color: #6366f1; }
+        .stat-label { color: #64748B; font-size: 14px; }
+        .table-wrap {
+            background: #1C212E; border: 1px solid #2D3748;
+            border-radius: 12px; overflow: hidden;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            background: #0F1117; color: #64748B;
+            font-size: 11px; text-transform: uppercase;
+            letter-spacing: 0.05em; padding: 14px 20px; text-align: left;
+        }
+        td { padding: 14px 20px; border-top: 1px solid #2D3748; font-size: 14px; }
+        tr:hover td { background: #232936; }
+        .badge {
+            background: rgba(99,102,241,0.15);
+            color: #818CF8; padding: 3px 10px; border-radius: 20px;
+            font-size: 12px;
+        }
+        .delete-btn {
+            background: rgba(239,68,68,0.1); color: #EF4444;
+            border: 1px solid rgba(239,68,68,0.3);
+            padding: 6px 14px; border-radius: 6px;
+            cursor: pointer; font-size: 12px; transition: 0.2s;
+        }
+        .delete-btn:hover { background: #EF4444; color: white; }
+        .empty { text-align: center; padding: 60px; color: #475569; }
+        .loading { text-align: center; padding: 60px; color: #6366f1; font-size: 15px; }
     </style>
 </head>
 <body>
 
-<div class="admin-container">
+<!-- ── LOGIN OVERLAY ── -->
+<div id="login-overlay">
+    <div class="login-card">
+        <img src="logo.png" alt="DidactIA">
+        <h2>Acceso Administrativo</h2>
+        <p>Panel de control exclusivo</p>
+        <div class="login-error" id="login-error">⚠️ Contraseña incorrecta</div>
+        <input type="password" id="admin-pwd" class="login-input"
+               placeholder="Contraseña de administrador"
+               onkeydown="if(event.key==='Enter') checkAdminLogin()">
+        <button class="login-btn" onclick="checkAdminLogin()">Entrar al Panel →</button>
+    </div>
+</div>
+
+<!-- ── PANEL ── -->
+<div id="admin-panel">
     <div class="admin-header">
-        <div>
-            <h1>Panel de Control DidactIA</h1>
-            <p style="color: #94A3B8;">Gestión de usuarios registrados</p>
+        <div class="admin-header-left">
+            <img src="logo.png" alt="DidactIA">
+            <div>
+                <h1>Panel de Control</h1>
+                <span>Gestión de usuarios · DidactIA</span>
+            </div>
         </div>
-        <a href="index.html" class="back-btn">← Volver al Chat</a>
+        <div class="header-actions">
+            <a href="index.html" class="btn-back">← Volver al Chat</a>
+            <button class="btn-logout" onclick="adminLogout()">Cerrar sesión</button>
+        </div>
     </div>
 
-    <div id="admin-content">
-        <div class="loading-spinner">Cargando usuarios...</div>
+    <div class="admin-body">
+        <div class="stats-bar">
+            <div>
+                <div class="stat-num" id="user-count">—</div>
+                <div class="stat-label">Docentes registrados</div>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <div class="loading" id="table-loading">Cargando usuarios...</div>
+            <table id="users-table" style="display:none">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Nickname</th>
+                        <th>Correo</th>
+                        <th>Fecha de Registro</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="users-body"></tbody>
+            </table>
+            <div class="empty" id="no-users" style="display:none">No hay docentes registrados aún.</div>
+        </div>
     </div>
 </div>
 
 <script type="module">
-    import { auth, db } from './firebase-config.js';
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { db } from './firebase-config.js';
     import { collection, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const ADMIN_EMAIL = "zlagustin10@gmail.com";
-    const contentDiv = document.getElementById('admin-content');
+    // ── CONTRASEÑA ADMIN (solo local, no se sube a Firebase) ──
+    const ADMIN_PASSWORD = "DidactIA_Admin_2026!";
+    const SESSION_KEY = "didactia_admin_session";
 
-    onAuthStateChanged(auth, async (user) => {
-        if (!user || user.email !== ADMIN_EMAIL) {
-            alert("No tienes permisos para acceder a esta pantalla.");
-            window.location.href = 'index.html';
-            return;
+    // Revisar si ya hay sesión activa
+    if (sessionStorage.getItem(SESSION_KEY) === "true") {
+        showPanel();
+    }
+
+    window.checkAdminLogin = () => {
+        const pwd = document.getElementById('admin-pwd').value;
+        if (pwd === ADMIN_PASSWORD) {
+            sessionStorage.setItem(SESSION_KEY, "true");
+            showPanel();
+        } else {
+            document.getElementById('login-error').style.display = 'block';
+            document.getElementById('admin-pwd').value = '';
+            document.getElementById('admin-pwd').focus();
         }
+    };
+
+    window.adminLogout = () => {
+        sessionStorage.removeItem(SESSION_KEY);
+        window.location.reload();
+    };
+
+    function showPanel() {
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('admin-panel').style.display = 'block';
         loadUsers();
-    });
+    }
 
     async function loadUsers() {
         try {
             const q = query(collection(db, "usuarios"), orderBy("fechaRegistro", "desc"));
-            const querySnapshot = await getDocs(q);
-            
-            if (querySnapshot.empty) {
-                contentDiv.innerHTML = '<div class="empty-state">No hay usuarios registrados en la base de datos.</div>';
+            const snap = await getDocs(q);
+
+            document.getElementById('table-loading').style.display = 'none';
+            document.getElementById('user-count').textContent = snap.size;
+
+            if (snap.empty) {
+                document.getElementById('no-users').style.display = 'block';
                 return;
             }
 
-            let html = `
-                <table class="user-table">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Nickname</th>
-                            <th>Email</th>
-                            <th>Fecha Registro</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                const fecha = data.fechaRegistro ? new Date(data.fechaRegistro).toLocaleDateString() : 'N/A';
-                html += `
-                    <tr id="row-${doc.id}">
-                        <td>${data.nombre || 'N/A'}</td>
-                        <td>${data.nickname || 'N/A'}</td>
-                        <td>${data.email}</td>
-                        <td>${fecha}</td>
-                        <td>
-                            <button class="delete-btn" onclick="confirmDelete('${doc.id}', '${data.email}')">Eliminar</button>
-                        </td>
-                    </tr>
+            const tbody = document.getElementById('users-body');
+            tbody.innerHTML = '';
+            snap.forEach(d => {
+                const u = d.data();
+                const fecha = u.fechaRegistro
+                    ? new Date(u.fechaRegistro).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' })
+                    : 'N/A';
+                const row = document.createElement('tr');
+                row.id = `row-${d.id}`;
+                row.innerHTML = `
+                    <td>${u.nombre || '—'}</td>
+                    <td><span class="badge">${u.nickname || '—'}</span></td>
+                    <td>${u.email}</td>
+                    <td>${fecha}</td>
+                    <td><button class="delete-btn" onclick="removeUser('${d.id}','${u.email}')">Eliminar</button></td>
                 `;
+                tbody.appendChild(row);
             });
 
-            html += `</tbody></table>`;
-            contentDiv.innerHTML = html;
-
-        } catch (error) {
-            console.error("Error cargando usuarios:", error);
-            contentDiv.innerHTML = `<div class="empty-state">Error al cargar datos: ${error.message}</div>`;
+            document.getElementById('users-table').style.display = 'table';
+        } catch (err) {
+            document.getElementById('table-loading').textContent = 'Error al cargar: ' + err.message;
         }
     }
 
-    window.confirmDelete = async (uid, email) => {
-        if (email === ADMIN_EMAIL) return alert("No puedes eliminar la cuenta de administrador.");
-        
-        if (confirm(`¿Estás seguro de que deseas eliminar al usuario ${email}? Esta acción no se puede deshacer de Firestore.`)) {
-            try {
-                await deleteDoc(doc(db, "usuarios", uid));
-                document.getElementById(`row-${uid}`).remove();
-                alert("Usuario eliminado correctamente de Firestore.");
-            } catch (error) {
-                alert("Error al eliminar: " + error.message);
+    window.removeUser = async (uid, email) => {
+        if (!confirm(`¿Eliminar a ${email} de la lista? Esta acción no se puede deshacer.`)) return;
+        try {
+            await deleteDoc(doc(db, "usuarios", uid));
+            document.getElementById(`row-${uid}`)?.remove();
+            const count = document.querySelectorAll('#users-body tr').length;
+            document.getElementById('user-count').textContent = count;
+            if (count === 0) {
+                document.getElementById('users-table').style.display = 'none';
+                document.getElementById('no-users').style.display = 'block';
             }
+        } catch (err) {
+            alert('Error al eliminar: ' + err.message);
         }
     };
 </script>
