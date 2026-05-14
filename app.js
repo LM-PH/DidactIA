@@ -462,48 +462,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- INTEGRACIÓN MERCADO PAGO ---
+    // --- INTEGRACIÓN MERCADO PAGO (Event Delegation para robustez) ---
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.mp-buy-btn');
+        if (!btn) return;
 
-    const mpBuyButtons = document.querySelectorAll('.mp-buy-btn');
-    mpBuyButtons.forEach(btn => {
-        btn.addEventListener('click', async () => {
-            if (!USER_DATA) return alert("Por favor, inicia sesión para comprar créditos.");
-            
-            const pkgId = btn.getAttribute('data-pkg');
-            const credits = btn.getAttribute('data-credits') || btn.innerText.split(' ')[0]; // Fallback
-            const price = btn.getAttribute('data-price');
+        if (!USER_DATA) return alert("Por favor, inicia sesión para comprar créditos.");
+        
+        const pkgId = btn.getAttribute('data-pkg');
+        const credits = btn.getAttribute('data-credits') || btn.innerText.split(' ')[0];
+        const price = btn.getAttribute('data-price');
 
-            // Desactivar botón y mostrar carga
-            const originalText = btn.innerText;
-            btn.innerText = "Procesando...";
-            btn.disabled = true;
+        // Desactivar botón y mostrar carga
+        const originalText = btn.innerText;
+        btn.innerText = "Procesando...";
+        btn.disabled = true;
 
-            try {
-                const response = await fetch('/api/create-preference', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        pkgId: pkgId,
-                        credits: credits,
-                        price: price,
-                        uid: USER_DATA.uid,
-                        email: USER_DATA.email
-                    })
-                });
+        try {
+            const response = await fetch('/api/create-preference', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pkgId: pkgId,
+                    credits: credits,
+                    price: price,
+                    uid: USER_DATA.uid,
+                    email: USER_DATA.email
+                })
+            });
 
-                const result = await response.json();
-                if (result.init_point) {
-                    window.location.href = result.init_point;
-                } else {
-                    throw new Error(result.error || "Error al generar el pago");
-                }
-            } catch (error) {
-                console.error("Error MP:", error);
-                alert("Ocurrió un error al conectar con Mercado Pago. Inténtalo más tarde.");
-                btn.innerText = originalText;
-                btn.disabled = false;
+            const result = await response.json();
+            if (result.init_point) {
+                window.location.href = result.init_point;
+            } else {
+                throw new Error(result.error || "Error al generar el pago");
             }
-        });
+        } catch (error) {
+            console.error("Error MP:", error);
+            alert("Ocurrió un error al conectar con Mercado Pago. Inténtalo más tarde.");
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
     });
 
     // Manejar retorno de pago
