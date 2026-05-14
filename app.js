@@ -462,21 +462,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- INTEGRACIÓN MERCADO PAGO (Event Delegation para robustez) ---
-    document.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.mp-buy-btn');
-        if (!btn) return;
-
-        if (!USER_DATA) return alert("Por favor, inicia sesión para comprar créditos.");
+    // --- INTEGRACIÓN MERCADO PAGO GLOBAL ---
+    window.comprarCreditos = async function(btn) {
+        console.log("Iniciando compra para:", btn.getAttribute('data-pkg'));
+        
+        if (!USER_DATA) {
+            alert("Por favor, inicia sesión para comprar créditos.");
+            return;
+        }
         
         const pkgId = btn.getAttribute('data-pkg');
-        const credits = btn.getAttribute('data-credits') || btn.innerText.split(' ')[0];
+        const credits = btn.getAttribute('data-credits');
         const price = btn.getAttribute('data-price');
 
         // Desactivar botón y mostrar carga
         const originalText = btn.innerText;
         btn.innerText = "Procesando...";
         btn.disabled = true;
+        btn.style.opacity = "0.7";
 
         try {
             const response = await fetch('/api/create-preference', {
@@ -499,11 +502,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error("Error MP:", error);
-            alert("Ocurrió un error al conectar con Mercado Pago. Inténtalo más tarde.");
+            alert("Ocurrió un error al conectar con Mercado Pago. Por favor intenta de nuevo.");
             btn.innerText = originalText;
             btn.disabled = false;
+            btn.style.opacity = "1";
         }
-    });
+    };
 
     // Manejar retorno de pago
     const params = new URLSearchParams(window.location.search);
