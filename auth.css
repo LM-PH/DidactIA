@@ -334,7 +334,7 @@ body::before {
 .google-btn:disabled { opacity: 0.7; cursor: not-allowed; }
 
 .google-btn.loading .btn-text,
-.google-btn.loading img { 
+.google-btn.loading svg { 
     display: none; 
 }
 .google-btn.loading .spinner { 
