@@ -317,7 +317,7 @@ body {
     display: none;
     flex: 1;
     flex-direction: column;
-    padding: 24px;
+    padding: 0 24px 24px; /* Eliminado el padding superior */
     overflow-y: auto;
     animation: fadeIn 0.3s ease;
 }
@@ -328,6 +328,7 @@ body {
 
 #view-editor {
     padding: 0;
+    height: 100vh;
 }
 
 /* Modals */
@@ -429,12 +430,13 @@ body {
 }
 
 .section-header {
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     gap: 0.75rem;
     position: relative;
+    background: #F8FAFC; /* Fondo sutil para distinguir el tope */
 }
 
 .section-icon {
@@ -599,10 +601,12 @@ body {
 .content-viewer {
     flex: 1;
     overflow-y: auto;
-    padding: 2.5rem;
+    padding: 2rem;
     display: flex;
     flex-direction: column;
     align-items: center;
+    background: #fff;
+}
 }
 
 .viewer-placeholder {
