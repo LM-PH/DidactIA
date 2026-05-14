@@ -1,6 +1,6 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { doc, getDoc, setDoc, collection, query, where, orderBy, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { doc, getDoc, setDoc, deleteDoc, collection, query, where, orderBy, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { CONOCIMIENTO_NEM, DESCRIPCIONES_EJES } from './pedagogia.js';
 
 // Registrar PWA Service Worker
@@ -37,19 +37,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalizeBtn = document.getElementById('finalizar-btn');
     const newChatBtn = document.getElementById('new-chat-btn');
     
-    // UI Elements para Créditos
-    const userMenuBtn = document.getElementById('user-menu-btn');
-    const userMenu = document.getElementById('user-menu');
-    const creditsModal = document.getElementById('credits-modal');
-    const historyModal = document.getElementById('history-modal');
-    const openHistoryBtn = document.getElementById('open-history');
-    const openCreditsBtn = document.getElementById('open-credits');
-    const closeHistoryBtn = document.getElementById('close-history');
-    const closeCreditsBtn = document.getElementById('close-credits');
-    const transactionsContainer = document.getElementById('transactions-container');
+    // --- ELEMENTOS UI PANEL ---
+    const sideButtons = document.querySelectorAll('.side-btn');
+    const viewPanels = document.querySelectorAll('.view-panel');
+    const miniAvatar = document.getElementById('mini-avatar');
+    const miniName = document.getElementById('mini-name');
+    const miniPlan = document.getElementById('mini-plan');
+    const profileAvatarLarge = document.getElementById('profile-avatar-large');
+    const profileName = document.getElementById('profile-name');
+    const profileEmail = document.getElementById('profile-email');
+    const profilePlanBadge = document.getElementById('profile-plan-badge');
+    const statCredits = document.getElementById('stat-credits');
+    const statTotalPlans = document.getElementById('stat-total-plans');
+    const plansListContainer = document.getElementById('plans-list-container');
+    const creditsHistoryContainer = document.getElementById('credits-history-container');
+    const searchPlansInput = document.getElementById('search-plans');
 
     let currentPlanningHtml = '';
     let conversationHistory = [];
+
+    // --- NAVEGACIÓN ENTRE VISTAS ---
+    sideButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetView = btn.getAttribute('data-view');
+            switchView(targetView);
+        });
+    });
+
+    function switchView(viewId) {
+        // Desactivar botones
+        sideButtons.forEach(b => b.classList.remove('active'));
+        const activeBtn = document.querySelector(`.side-btn[data-view="${viewId}"]`);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        // Cambiar paneles
+        viewPanels.forEach(p => p.classList.remove('active'));
+        const activePanel = document.getElementById(`view-${viewId}`);
+        if (activePanel) activePanel.classList.add('active');
+
+        // Acciones específicas
+        if (viewId === 'planeaciones') loadMyPlannings();
+        if (viewId === 'credits') loadCreditsHistory();
+    }
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
@@ -105,58 +134,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- MANEJO DE UI (MENÚS Y MODALES) ---
-    userMenuBtn.onclick = (e) => { e.stopPropagation(); userMenu.classList.toggle('active'); };
-    document.onclick = () => userMenu.classList.remove('active');
-    
-    openHistoryBtn.onclick = () => { historyModal.classList.add('active'); loadTransactions(); };
-    openCreditsBtn.onclick = () => creditsModal.classList.add('active');
-    closeHistoryBtn.onclick = () => historyModal.classList.remove('active');
-    closeCreditsBtn.onclick = () => creditsModal.classList.remove('active');
-    logoutBtn.onclick = () => signOut(auth);
-
-    async function loadTransactions() {
-        if (!USER_DATA?.uid) return;
-        transactionsContainer.innerHTML = '<p class="loading-text">Cargando...</p>';
-        
-        try {
-            const q = query(
-                collection(db, "transactions"),
-                where("uid", "==", USER_DATA.uid),
-                orderBy("fecha", "desc"),
-                limit(20)
-            );
-            
-            onSnapshot(q, (snapshot) => {
-                if (snapshot.empty) {
-                    transactionsContainer.innerHTML = '<p class="empty-text">No hay movimientos aún.</p>';
-                    return;
-                }
-                
-                let html = '';
-                snapshot.forEach(doc => {
-                    const tx = doc.data();
-                    const fecha = tx.fecha?.toDate().toLocaleDateString() || 'Reciente';
-                    const isPos = tx.creditos > 0;
-                    html += `
-                        <div class="transaction-item">
-                            <div class="tx-info">
-                                <h5>${tx.descripcion}</h5>
-                                <span>${fecha} • ${tx.tipo}</span>
-                            </div>
-                            <div class="tx-amount ${isPos ? 'pos' : 'neg'}">
-                                ${isPos ? '+' : ''}${tx.creditos}
-                            </div>
-                        </div>
-                    `;
-                });
-                transactionsContainer.innerHTML = html;
-            });
-        } catch (err) {
-            console.error(err);
-            transactionsContainer.innerHTML = '<p class="error-text">Error al cargar historial.</p>';
-        }
+    // --- MANEJO DE UI (HEADER Y LOGOUT) ---
+    if (userMenuBtn) {
+        userMenuBtn.onclick = (e) => { 
+            e.stopPropagation(); 
+            userMenu.classList.toggle('active'); 
+        };
     }
+    document.addEventListener('click', () => { if (userMenu) userMenu.classList.remove('active'); });
+    
+    if (logoutBtn) logoutBtn.onclick = () => signOut(auth);
 
     async function handleSend() {
         if (!IS_LOADED) {
@@ -321,3 +308,224 @@ document.addEventListener('DOMContentLoaded', () => {
     finalizeBtn.onclick = () => { if(currentPlanningHtml) downloadBtn.click(); };
     newChatBtn.onclick = () => { conversationHistory = []; location.reload(); };
 });
+
+    // --- FUNCIONES DE CARGA DE DATOS ---
+
+    async function loadMyPlannings() {
+        if (!USER_DATA?.uid) return;
+        plansListContainer.innerHTML = '<p class="loading-text">Cargando tus planeaciones...</p>';
+        
+        try {
+            const q = query(
+                collection(db, "planeaciones"),
+                where("uid", "==", USER_DATA.uid),
+                orderBy("fechaCreacion", "desc")
+            );
+            
+            onSnapshot(q, (snapshot) => {
+                if (snapshot.empty) {
+                    plansListContainer.innerHTML = '<div class="viewer-placeholder"><h3>No tienes planeaciones</h3><p>Genera tu primera planeación en el Editor.</p></div>';
+                    return;
+                }
+                
+                plansListContainer.innerHTML = "";
+                snapshot.forEach(docSnap => {
+                    const plan = docSnap.data();
+                    const card = createPlanCard(docSnap.id, plan);
+                    plansListContainer.appendChild(card);
+                });
+            });
+        } catch (error) {
+            console.error("Error al cargar planeaciones:", error);
+        }
+    }
+
+    function createPlanCard(id, plan) {
+        const div = document.createElement('div');
+        div.className = 'plan-item-card';
+        const date = plan.fechaCreacion ? plan.fechaCreacion.toDate().toLocaleDateString() : 'Reciente';
+        
+        div.innerHTML = `
+            <div class="plan-card-header">
+                <div>
+                    <h4 class="plan-card-title">${plan.titulo || 'Sin título'}</h4>
+                    <div class="plan-card-meta">
+                        <span>📅 ${date}</span>
+                        <span>📚 ${plan.asignatura || 'General'}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="plan-card-actions">
+                <button class="btn-icon-sm open-btn" title="Abrir">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </button>
+                <button class="btn-icon-sm copy-btn" title="Copiar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </button>
+                <button class="btn-icon-sm delete delete-btn" title="Eliminar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+            </div>
+        `;
+
+        div.querySelector('.open-btn').onclick = () => {
+            currentPlanningHtml = plan.contenido;
+            contentViewer.innerHTML = plan.contenido;
+            switchView('editor');
+        };
+
+        div.querySelector('.copy-btn').onclick = () => {
+            const text = contentViewer.innerText; // Fallback or use a hidden div
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = plan.contenido;
+            const plainText = tempDiv.innerText;
+            navigator.clipboard.writeText(plainText).then(() => alert("Copiado al portapapeles"));
+        };
+
+        div.querySelector('.delete-btn').onclick = async () => {
+            if (confirm("¿Estás seguro de eliminar esta planeación?")) {
+                await deleteDoc(doc(db, "planeaciones", id));
+            }
+        };
+
+        return div;
+    }
+
+    async function loadCreditsHistory() {
+        if (!USER_DATA?.uid) return;
+        creditsHistoryContainer.innerHTML = '<p class="loading-text">Cargando movimientos...</p>';
+        
+        try {
+            const q = query(
+                collection(db, "transactions"),
+                where("uid", "==", USER_DATA.uid),
+                orderBy("fecha", "desc"),
+                limit(50)
+            );
+            
+            onSnapshot(q, (snapshot) => {
+                if (snapshot.empty) {
+                    creditsHistoryContainer.innerHTML = '<p class="loading-text">No hay movimientos registrados.</p>';
+                    return;
+                }
+                
+                creditsHistoryContainer.innerHTML = "";
+                snapshot.forEach(docSnap => {
+                    const tx = docSnap.data();
+                    const date = tx.fecha ? tx.fecha.toDate().toLocaleString() : 'Reciente';
+                    const item = document.createElement('div');
+                    item.className = 'transaction-item';
+                    item.innerHTML = `
+                        <div class="tx-info">
+                            <span class="tx-desc">${tx.descripcion}</span>
+                            <span class="tx-date">${date}</span>
+                            ${tx.referencia ? `<span class="tx-ref">Ref: ${tx.referencia}</span>` : ''}
+                        </div>
+                        <div class="tx-status-group">
+                            <span class="tx-amount ${tx.creditos < 0 ? 'neg' : 'pos'}">
+                                ${tx.creditos > 0 ? '+' : ''}${tx.creditos}
+                            </span>
+                            <small class="tx-type-tag">${tx.tipo}</small>
+                        </div>
+                    `;
+                    creditsHistoryContainer.appendChild(item);
+                });
+            });
+        } catch (error) {
+            console.error("Error al cargar historial:", error);
+        }
+    }
+
+    // Buscador
+    if (searchPlansInput) {
+        searchPlansInput.oninput = (e) => {
+            const term = e.target.value.toLowerCase();
+            const cards = plansListContainer.querySelectorAll('.plan-item-card');
+            cards.forEach(card => {
+                const title = card.querySelector('.plan-card-title').innerText.toLowerCase();
+                const meta = card.querySelector('.plan-card-meta').innerText.toLowerCase();
+                if (title.includes(term) || meta.includes(term)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        };
+    }
+
+    const openCreditsFromPanel = document.getElementById('open-credits-from-panel');
+    if (openCreditsFromPanel) {
+        openCreditsFromPanel.onclick = () => creditsModal.classList.add('active');
+    }
+
+
+    // --- INTEGRACIÓN MERCADO PAGO ---
+
+    const mpBuyButtons = document.querySelectorAll('.mp-buy-btn');
+    mpBuyButtons.forEach(btn => {
+        btn.addEventListener('click', async () => {
+            if (!USER_DATA) return alert("Por favor, inicia sesión para comprar créditos.");
+            
+            const pkgId = btn.getAttribute('data-pkg');
+            const credits = btn.getAttribute('data-credits') || btn.innerText.split(' ')[0]; // Fallback
+            const price = btn.getAttribute('data-price');
+
+            // Desactivar botón y mostrar carga
+            const originalText = btn.innerText;
+            btn.innerText = "Procesando...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/create-preference', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pkgId: pkgId,
+                        credits: credits,
+                        price: price,
+                        uid: USER_DATA.uid,
+                        email: USER_DATA.email
+                    })
+                });
+
+                const result = await response.json();
+                if (result.init_point) {
+                    window.location.href = result.init_point;
+                } else {
+                    throw new Error(result.error || "Error al generar el pago");
+                }
+            } catch (error) {
+                console.error("Error MP:", error);
+                alert("Ocurrió un error al conectar con Mercado Pago. Inténtalo más tarde.");
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        });
+    });
+
+    // Manejar retorno de pago
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get('status');
+    if (paymentStatus) {
+        if (paymentStatus === 'success') {
+            addMessage("✅ ¡Gracias por tu compra! Tus créditos se están procesando y aparecerán en tu cuenta en unos segundos.", 'bot');
+            switchView('dashboard');
+        } else if (paymentStatus === 'failure') {
+            addMessage("❌ El pago no pudo completarse. Si crees que es un error, contacta a soporte.", 'bot');
+        } else if (paymentStatus === 'pending') {
+            addMessage("⏳ Tu pago está pendiente de aprobación. Te avisaremos cuando se acredite.", 'bot');
+        }
+        // Limpiar URL para no repetir el mensaje al recargar
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+
+    // --- MANEJO DE MODALES RESTANTES ---
+    const closeCreditsBtn = document.getElementById('close-credits');
+    if (closeCreditsBtn) {
+        closeCreditsBtn.onclick = () => creditsModal.classList.remove('active');
+    }
+    // Cerrar modal al hacer click fuera
+    window.onclick = (event) => {
+        if (event.target == creditsModal) creditsModal.classList.remove('active');
+    }

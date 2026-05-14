@@ -4,6 +4,7 @@
   "description": "DidactIA - Asistente de Planeación Didáctica para Docentes",
   "type": "module",
   "dependencies": {
-    "firebase-admin": "^12.1.0"
+    "firebase-admin": "^12.1.0",
+    "mercadopago": "^2.0.11"
   }
 }

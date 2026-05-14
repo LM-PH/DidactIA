@@ -15,7 +15,44 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
 </head>
-<body>
+<body class="dashboard-layout">
+
+<!-- Sidebar Izquierda -->
+<nav class="app-sidebar">
+    <div class="sidebar-top">
+        <img src="logo.png" alt="DidactIA" class="sidebar-logo">
+        <h2 class="sidebar-brand">DidactIA</h2>
+    </div>
+    <div class="sidebar-menu">
+        <button class="side-btn active" data-view="editor">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>Editor</span>
+        </button>
+        <button class="side-btn" data-view="dashboard">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span>Dashboard</span>
+        </button>
+        <button class="side-btn" data-view="planeaciones">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span>Mis Planeaciones</span>
+        </button>
+        <button class="side-btn" data-view="credits">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span>Créditos</span>
+        </button>
+    </div>
+    <div class="sidebar-footer">
+        <div class="mini-profile">
+            <div class="mini-avatar" id="mini-avatar">?</div>
+            <div class="mini-info">
+                <span id="mini-name">Docente</span>
+                <span id="mini-plan">Plan Gratis</span>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="app-content">
 
 <!-- Guard de autenticación: se muestra mientras carga -->
 <div id="auth-guard" style="position:fixed;inset:0;background:#0F1117;display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:16px;">
@@ -32,89 +69,177 @@
             <span class="header-subtitle">Asistente para Docentes</span>
         </div>
     </div>
-    <div class="header-right">
-        <div class="user-chip" id="user-menu-btn">
+        <button class="user-chip" id="user-menu-btn" style="margin-left: auto;">
             <div class="user-avatar" id="user-avatar" style="background-size: cover; background-position: center;">?</div>
             <div class="user-info">
                 <span id="user-nickname">Cargando...</span>
                 <span id="user-credits" class="user-credits">Créditos: --</span>
             </div>
-            <!-- Menú desplegable -->
+            <!-- Menú desplegable simplificado -->
             <div class="user-menu" id="user-menu">
-                <div class="menu-header">Mi Cuenta</div>
-                <div class="menu-item" id="open-history">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    Historial
-                </div>
-                <div class="menu-item" id="open-credits">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                    Comprar Créditos
-                </div>
-                <div class="menu-divider"></div>
-                <a href="admin.html" class="menu-item" id="admin-link" style="display:none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    Panel Admin
-                </a>
                 <div class="menu-item logout" id="logout-btn">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                     Cerrar sesión
                 </div>
             </div>
-        </div>
-    </div>
+        </button>
 </header>
 
-<main class="app-main">
-    <!-- Panel Izquierdo: Chat -->
-    <section class="chat-section">
-        <div class="section-header">
-            <div class="section-icon">💬</div>
-            <div>
-                <h2 class="section-title">Chat con DidactIA</h2>
-                <p class="section-desc">Conversa paso a paso</p>
-            </div>
-            <button class="new-chat-btn" id="new-chat-btn" title="Nueva planeación">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Nueva
-            </button>
-        </div>
-        <div class="chat-messages" id="chat-messages"></div>
-        <div class="chat-input-area">
-            <textarea id="chat-input" class="chat-input" placeholder="Escribe tu mensaje... (Shift+Enter para nueva línea)" rows="1"></textarea>
-            <button id="send-btn" class="send-btn">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            </button>
-        </div>
-    </section>
+    <!-- VISTA 1: EDITOR (Chat + Visor) -->
+    <div id="view-editor" class="view-panel active">
+        <main class="app-main">
+            <!-- Panel Izquierdo: Chat -->
+            <section class="chat-section">
+                <div class="section-header">
+                    <div class="section-icon">💬</div>
+                    <div>
+                        <h2 class="section-title">Chat con DidactIA</h2>
+                        <p class="section-desc">Conversa paso a paso</p>
+                    </div>
+                    <button class="new-chat-btn" id="new-chat-btn" title="Nueva planeación">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Nueva
+                    </button>
+                </div>
+                <div class="chat-messages" id="chat-messages"></div>
+                <div class="chat-input-area">
+                    <textarea id="chat-input" class="chat-input" placeholder="Escribe tu mensaje..." rows="1"></textarea>
+                    <button id="send-btn" class="send-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                </div>
+            </section>
 
-    <!-- Panel Derecho: Visor -->
-    <section class="viewer-section">
-        <div class="section-header">
-            <div class="section-icon">📄</div>
-            <div>
-                <h2 class="section-title">Planeación Generada</h2>
-                <p class="section-desc">Vista previa en tiempo real</p>
+            <!-- Panel Derecho: Visor -->
+            <section class="viewer-section">
+                <div class="section-header">
+                    <div class="section-icon">📄</div>
+                    <div>
+                        <h2 class="section-title">Planeación Generada</h2>
+                        <p class="section-desc">Vista previa en tiempo real</p>
+                    </div>
+                </div>
+                <div class="content-viewer" id="content-viewer">
+                    <div class="viewer-placeholder">
+                        <div class="placeholder-icon">📋</div>
+                        <h3>Tu planeación aparecerá aquí</h3>
+                        <p>Comienza la conversación con DidactIA.</p>
+                    </div>
+                </div>
+                <div class="viewer-actions">
+                    <button class="action-btn primary" id="finalizar-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        Versión final
+                    </button>
+                    <button class="action-btn secondary" id="download-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        PDF
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- VISTA 2: DASHBOARD (Perfil + Stats) -->
+    <div id="view-dashboard" class="view-panel">
+        <div class="panel-header">
+            <h2>Mi Perfil</h2>
+            <p>Resumen de tu cuenta y actividad</p>
+        </div>
+        <div class="dashboard-grid">
+            <div class="profile-card">
+                <div class="profile-main">
+                    <div class="profile-avatar-large" id="profile-avatar-large">?</div>
+                    <div class="profile-text">
+                        <h3 id="profile-name">Docente</h3>
+                        <p id="profile-email">correo@ejemplo.com</p>
+                        <span class="badge-plan" id="profile-plan-badge">Plan Gratis</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon credits">💎</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-credits">--</span>
+                        <div class="stat-row">
+                            <span class="stat-label">Créditos</span>
+                            <button class="btn-mini" onclick="switchView('credits')">Recargar</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon plans">📄</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-total-plans">--</span>
+                        <span class="stat-label">Planeaciones Generadas</span>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="content-viewer" id="content-viewer">
-            <div class="viewer-placeholder">
-                <div class="placeholder-icon">📋</div>
-                <h3>Tu planeación aparecerá aquí</h3>
-                <p>Comienza la conversación con DidactIA y la planeación se generará automáticamente en formato tabla.</p>
+    </div>
+
+    <!-- VISTA 3: MIS PLANEACIONES -->
+    <div id="view-planeaciones" class="view-panel">
+        <div class="panel-header">
+            <div class="header-content">
+                <h2>Mis Planeaciones</h2>
+                <p>Historial de documentos generados</p>
+            </div>
+            <div class="header-search">
+                <input type="text" id="search-plans" placeholder="Buscar por título o asignatura...">
             </div>
         </div>
-        <div class="viewer-actions">
-            <button class="action-btn primary" id="finalizar-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                Generar versión final
-            </button>
-            <button class="action-btn secondary" id="download-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Descargar en PDF (.pdf)
-            </button>
+        <div class="plans-list" id="plans-list-container">
+            <p class="loading-text">Cargando tus planeaciones...</p>
         </div>
-    </section>
-</main>
+    </div>
+
+    <!-- VISTA 4: CRÉDITOS -->
+    <div id="view-credits" class="view-panel">
+        <div class="panel-header">
+            <div class="header-content">
+                <h2>Mis Créditos</h2>
+                <p>Gestiona tu saldo y revisa tus movimientos</p>
+            </div>
+        </div>
+
+        <div class="credits-dashboard">
+            <div class="buy-credits-section">
+                <h3>🛒 Adquirir Créditos</h3>
+                <div class="credits-grid">
+                    <div class="credit-plan" data-pkg="20">
+                        <div class="plan-name">Inicial</div>
+                        <div class="plan-amount">20 Créditos</div>
+                        <div class="plan-price">$400 <small>MXN</small></div>
+                        <button class="buy-now-btn mp-buy-btn" data-pkg="20" data-credits="20" data-price="400">Adquirir</button>
+                    </div>
+                    <div class="credit-plan popular" data-pkg="50">
+                        <div class="plan-badge">MÁS ELEGIDO</div>
+                        <div class="plan-name">Pro</div>
+                        <div class="plan-amount">50 Créditos</div>
+                        <div class="plan-price">$850 <small>MXN</small></div>
+                        <button class="buy-now-btn mp-buy-btn" data-pkg="50" data-credits="50" data-price="850">Adquirir</button>
+                    </div>
+                    <div class="credit-plan" data-pkg="120">
+                        <div class="plan-name">Master</div>
+                        <div class="plan-amount">120 Créditos</div>
+                        <div class="plan-price">$2,000 <small>MXN</small></div>
+                        <button class="buy-now-btn mp-buy-btn" data-pkg="120" data-credits="120" data-price="2000">Adquirir</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="history-section">
+                <h3>📜 Historial de Movimientos</h3>
+                <div id="credits-history-container" class="transactions-list full-width">
+                    <p class="loading-text">Cargando movimientos...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div> <!-- Fin app-content -->
 
 <!-- Modal: Historial -->
 <div id="history-modal" class="modal">
@@ -135,35 +260,42 @@
 <div id="credits-modal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>💎 Cargar Créditos</h3>
+            <h3>💎 Adquirir Créditos</h3>
             <button class="close-btn" id="close-credits">&times;</button>
         </div>
         <div class="modal-body">
             <div class="credits-grid">
-                <div class="credit-plan">
-                    <h4>Básico</h4>
-                    <span class="price">5 Créditos</span>
-                    <p>Para tus planeaciones semanales.</p>
-                    <button class="buy-now-btn">Adquirir</button>
+                <div class="credit-plan" data-pkg="20">
+                    <div class="plan-name">Paquete Inicial</div>
+                    <div class="plan-amount">20 Créditos</div>
+                    <div class="plan-price">$400 <small>MXN</small></div>
+                    <button class="buy-now-btn mp-buy-btn" data-pkg="20" data-price="400">Adquirir</button>
                 </div>
-                <div class="credit-plan featured">
-                    <div class="badge">Recomendado</div>
-                    <h4>Pro</h4>
-                    <span class="price">20 Créditos</span>
-                    <p>Ideal para todo el mes escolar.</p>
-                    <button class="buy-now-btn">Adquirir</button>
+                <div class="credit-plan featured" data-pkg="50">
+                    <div class="plan-badge">RECOMENDADO</div>
+                    <div class="plan-name">Paquete Pro</div>
+                    <div class="plan-amount">50 Créditos</div>
+                    <div class="plan-price">$850 <small>MXN</small></div>
+                    <button class="buy-now-btn mp-buy-btn" data-pkg="50" data-price="850">Adquirir</button>
+                </div>
+                <div class="credit-planMaster" data-pkg="120" style="grid-column: span 2; margin-top: 10px;">
+                    <div class="plan-name">Paquete Master</div>
+                    <div class="plan-amount">120 Créditos</div>
+                    <div class="plan-price">$2,000 <small>MXN</small></div>
+                    <button class="buy-now-btn mp-buy-btn" data-pkg="120" data-price="2000">Adquirir</button>
                 </div>
             </div>
+            <p class="limit-note">Pagos procesados de forma segura por Mercado Pago.</p>
         </div>
     </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script type="module" src="app.js?v=7.2"></script>
+<script type="module" src="app.js?v=8.0"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js?v=7.1');
+            navigator.serviceWorker.register('./sw.js?v=8.0');
         });
     }
 </script>

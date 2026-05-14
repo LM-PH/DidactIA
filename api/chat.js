@@ -111,19 +111,40 @@ ${JSON.stringify(pedagogicalData?.ejes || {})}`;
         const aiText = data.candidates[0].content.parts[0].text;
         const isPlanningGenerated = aiText.includes('id="planeacion-oficial"') || aiText.includes('<table');
 
-        // --- CONSUMO DE CRÉDITO ---
+        // --- CONSUMO DE CRÉDITO Y GUARDADO AUTOMÁTICO ---
         if (db && isPlanningGenerated) {
-            const today = new Date().toISOString().split('T')[0];
-            
             await db.runTransaction(async (t) => {
                 const snap = await t.get(userDocRef);
                 const userData = snap.data();
                 
                 const newCredits = (userData.creditos || 0) - 1;
+                const totalGenerated = (userData.totalPlaneaciones || 0) + 1;
+
+                // Extraer metadatos básicos de la planeación (búsqueda simple)
+                const subjectMatch = aiText.match(/Asignatura:<\/th>\s*<td>(.*?)<\/td>/i);
+                const gradeMatch = aiText.match(/Grado y Grupo:<\/th>\s*<td>(.*?)<\/td>/i);
+                const topicMatch = aiText.match(/Tema:<\/th>\s*<td>(.*?)<\/td>/i);
+
+                const asignatura = subjectMatch ? subjectMatch[1].trim() : "Sin asignar";
+                const grado = gradeMatch ? gradeMatch[1].trim() : "";
+                const tema = topicMatch ? topicMatch[1].trim() : "Planeación Didáctica";
+                const titulo = `${tema} - ${asignatura} ${grado}`.trim();
 
                 // Actualizar Usuario
                 t.update(userDocRef, {
-                    creditos: Math.max(0, newCredits)
+                    creditos: Math.max(0, newCredits),
+                    totalPlaneaciones: totalGenerated
+                });
+
+                // Guardar Planeación
+                const planRef = db.collection('planeaciones').doc();
+                t.set(planRef, {
+                    uid: uid,
+                    titulo: titulo,
+                    contenido: aiText,
+                    asignatura: asignatura,
+                    nivelEducativo: grado,
+                    fechaCreacion: admin.firestore.FieldValue.serverTimestamp()
                 });
 
                 // Registrar Transacción
@@ -132,12 +153,12 @@ ${JSON.stringify(pedagogicalData?.ejes || {})}`;
                     uid: uid,
                     tipo: 'uso',
                     creditos: -1,
-                    descripcion: 'Generación de planeación didáctica',
+                    descripcion: `Generación: ${titulo}`,
                     fecha: admin.firestore.FieldValue.serverTimestamp(),
-                    referencia: 'didactia_chat'
+                    referencia: planRef.id
                 });
             });
-            console.log(`Crédito descontado para el usuario ${uid}`);
+            console.log(`Crédito descontado y planeación guardada para ${uid}`);
         }
 
         res.status(200).json(data);
