@@ -47,21 +47,6 @@ export default async function handler(req, res) {
                     message: 'Te has quedado sin créditos. Por favor, adquiere más para continuar.' 
                 });
             }
-
-            // Validar Límite Diario (Solo para usuarios gratuitos)
-            if (data.plan === 'gratis') {
-                const lastDate = data.lastGenerationDate || "";
-                let countToday = data.generationsToday || 0;
-
-                if (lastDate === today) {
-                    if (countToday >= 5) {
-                        return res.status(403).json({ 
-                            error: 'LIMITE_DIARIO', 
-                            message: 'Has alcanzado el límite de 5 planeaciones gratuitas por hoy. ¡Vuelve mañana o sube a Premium!' 
-                        });
-                    }
-                }
-            }
         }
     }
 
@@ -135,14 +120,10 @@ ${JSON.stringify(pedagogicalData?.ejes || {})}`;
                 const userData = snap.data();
                 
                 const newCredits = (userData.creditos || 0) - 1;
-                const lastDate = userData.lastGenerationDate || "";
-                const newCountToday = (lastDate === today) ? (userData.generationsToday || 0) + 1 : 1;
 
                 // Actualizar Usuario
                 t.update(userDocRef, {
-                    creditos: Math.max(0, newCredits),
-                    generationsToday: newCountToday,
-                    lastGenerationDate: today
+                    creditos: Math.max(0, newCredits)
                 });
 
                 // Registrar Transacción

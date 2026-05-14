@@ -192,8 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (error.message.includes('SIN_CREDITOS')) {
                 addMessage("⚠️ Se han agotado tus créditos durante la generación.", 'bot');
                 creditsModal.classList.add('active');
-            } else if (error.message.includes('LIMITE_DIARIO')) {
-                addMessage("⚠️ Has alcanzado el límite diario de 5 planeaciones para el plan gratuito.", 'bot');
             } else {
                 addMessage(`Error: ${error.message}`, 'bot');
             }
