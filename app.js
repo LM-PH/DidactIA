@@ -54,10 +54,40 @@ document.addEventListener('DOMContentLoaded', () => {
             if (adminBtn) adminBtn.style.display = 'flex';
         }
 
-        let nickname = user.displayName || user.email.split('@')[0];
-        USER_DATA = { nickname, email: user.email, uid: user.uid };
+        // Obtener datos extendidos de Firestore
+        let userDataFirestore = {};
+        try {
+            const userDoc = await getDoc(doc(db, "usuarios", user.uid));
+            if (userDoc.exists()) {
+                userDataFirestore = userDoc.data();
+            }
+        } catch (err) {
+            console.error("Error al obtener datos de usuario:", err);
+        }
+
+        let nickname = userDataFirestore.nickname || user.displayName || user.email.split('@')[0];
+        let fotoPerfil = userDataFirestore.fotoPerfil || user.photoURL || "";
+        let creditos = userDataFirestore.creditos ?? "--";
+
+        USER_DATA = { 
+            nickname, 
+            email: user.email, 
+            uid: user.uid,
+            creditos: creditos,
+            plan: userDataFirestore.plan || "gratis"
+        };
+
         userNicknameSpan.textContent = nickname;
-        userAvatarDiv.textContent = nickname.charAt(0).toUpperCase();
+        const creditsSpan = document.getElementById('user-credits');
+        if (creditsSpan) creditsSpan.textContent = `Créditos: ${creditos}`;
+
+        if (fotoPerfil) {
+            userAvatarDiv.style.backgroundImage = `url(${fotoPerfil})`;
+            userAvatarDiv.textContent = "";
+        } else {
+            userAvatarDiv.style.backgroundImage = "none";
+            userAvatarDiv.textContent = nickname.charAt(0).toUpperCase();
+        }
 
         if (chatMessages.children.length === 0) {
             addMessage(`¡Hola, ${nickname}! 👋 Soy DidactIA. Vamos a crear una planeación 100% oficial de forma ordenada.\n\nEmpecemos con el Protocolo de 8 Pasos:\n\n**1. ¿Cuál es el nombre de tu escuela?**`, 'bot');

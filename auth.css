@@ -294,13 +294,52 @@ body::before {
     gap: 12px;
     color: var(--muted);
     font-size: 12px;
-    margin: 4px 0;
+    margin: 20px 0;
 }
 .auth-divider::before, .auth-divider::after {
     content: '';
     flex: 1;
     height: 1px;
     background: var(--border);
+}
+
+/* Google Button */
+.google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: white;
+    color: #1e293b;
+    border: none;
+    border-radius: 12px;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+.google-btn img {
+    width: 20px;
+    height: 20px;
+}
+.google-btn:hover {
+    background: #f8fafc;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.google-btn:active { transform: translateY(0); }
+.google-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.google-btn.loading .btn-text,
+.google-btn.loading img { 
+    display: none; 
+}
+.google-btn.loading .spinner { 
+    display: block; 
+    border-top-color: var(--primary);
 }
 
 /* Footer */

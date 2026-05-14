@@ -95,6 +95,18 @@
             </button>
         </form>
 
+        <!-- Divisor -->
+        <div class="auth-divider">
+            <span>O continúa con</span>
+        </div>
+
+        <!-- Google Login -->
+        <button class="google-btn" id="google-btn" onclick="handleGoogleLogin()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/layout/google.png" alt="Google">
+            <span class="btn-text">Continuar con Google</span>
+            <div class="spinner"></div>
+        </button>
+
         <div class="auth-footer">
             <p>Al registrarte, aceptas usar esta herramienta con fines educativos 📚</p>
             <div style="margin-top: 15px; border-top: 1px solid #334155; padding-top: 15px;">
@@ -237,26 +249,46 @@
     window.handleGoogleLogin = async () => {
         const provider = new GoogleAuthProvider();
         try {
+            setLoading('google-btn', true);
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
             
-            // Verificamos si ya existe en Firestore, si no, lo guardamos
-            const userDoc = await getDoc(doc(db, "usuarios", user.uid));
+            // Verificamos si ya existe en Firestore
+            const userDocRef = doc(db, "usuarios", user.uid);
+            const userDoc = await getDoc(userDocRef);
+            
             if (!userDoc.exists()) {
-                await setDoc(doc(db, "usuarios", user.uid), {
-                    nombre: user.displayName,
-                    nickname: user.displayName.split(' ')[0],
+                // Si el correo ya existe en otro documento (usuario de contraseña), vinculamos
+                // (Firebase maneja la vinculación de cuenta si está configurado, 
+                // pero aquí nos aseguramos de que el registro en Firestore sea consistente)
+                await setDoc(userDocRef, {
+                    nombre: user.displayName || "Docente DidactIA",
+                    nickname: (user.displayName || "Docente").split(' ')[0],
                     email: user.email,
+                    fotoPerfil: user.photoURL || "",
+                    proveedor: "google",
+                    creditos: 3,
+                    plan: "gratis",
                     fechaRegistro: new Date().toISOString(),
                     uid: user.uid
                 });
+            } else {
+                // Si ya existe, actualizamos solo la foto si cambió
+                await setDoc(userDocRef, { 
+                    fotoPerfil: user.photoURL || userDoc.data().fotoPerfil || "" 
+                }, { merge: true });
             }
             
             showMessage('success', `🎉 ¡Bienvenido/a, ${user.displayName}! Entrando...`);
             setTimeout(() => window.location.href = 'index.html', 1000);
         } catch (err) {
             console.error(err);
-            showMessage('error', '⚠️ Error al conectar con Google: ' + err.message);
+            if (err.code === 'auth/account-exists-with-different-credential') {
+                showMessage('error', '⚠️ Ya existe una cuenta con este correo pero con otro método de inicio de sesión.');
+            } else {
+                showMessage('error', '⚠️ Error al conectar con Google: ' + err.message);
+            }
+            setLoading('google-btn', false);
         }
     };
 
@@ -311,6 +343,10 @@
                     nombre: name,
                     nickname: nickname,
                     email: email,
+                    fotoPerfil: "",
+                    proveedor: "email",
+                    creditos: 3,
+                    plan: "gratis",
                     fechaRegistro: new Date().toISOString(),
                     uid: userCred.user.uid
                 });

@@ -101,10 +101,27 @@ body {
     font-weight: 700;
 }
 
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
 #user-nickname {
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-main);
+    line-height: 1.1;
+}
+
+#user-credits {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--primary-light);
+    padding: 1px 6px;
+    border-radius: 4px;
+    width: fit-content;
 }
 
 .logout-btn {
