@@ -310,16 +310,16 @@ body {
     flex-direction: column;
     position: relative;
     overflow: hidden;
+    height: 100vh;
 }
 
 /* --- VIEWS --- */
 .view-panel {
     display: none;
     flex: 1;
-    flex-direction: column;
-    padding: 0 !important; /* Eliminado todo el padding */
-    margin: 0 !important;
-    overflow-y: auto;
+    height: 100%;
+    width: 100%;
+    overflow: hidden; /* El scroll lo manejan los hijos */
     animation: fadeIn 0.3s ease;
 }
 
@@ -412,9 +412,16 @@ body {
 .tx-amount.pos { color: #10B981; }
 
 /* Main Layout */
+.editor-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+}
+
 .chat-section {
-    width: 380px;
-    background: var(--bg-card);
+    width: 360px; /* Un poco más estrecho para no saturar */
+    background: #fff;
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
@@ -427,7 +434,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: white;
+    background: #F8FAFC; /* Un fondo gris casi blanco para el visor ayuda a descansar la vista */
 }
 
 .section-header {
