@@ -248,20 +248,20 @@
                     <div class="plan-name">Paquete Inicial</div>
                     <div class="plan-amount">20 Créditos</div>
                     <div class="plan-price">$400 <small>MXN</small></div>
-                    <button class="buy-now-btn mp-buy-btn" data-pkg="20" data-price="400">Adquirir</button>
+                    <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="20" data-credits="20" data-price="400">Adquirir</button>
                 </div>
                 <div class="credit-plan featured" data-pkg="50">
                     <div class="plan-badge">RECOMENDADO</div>
                     <div class="plan-name">Paquete Pro</div>
                     <div class="plan-amount">50 Créditos</div>
                     <div class="plan-price">$850 <small>MXN</small></div>
-                    <button class="buy-now-btn mp-buy-btn" data-pkg="50" data-price="850">Adquirir</button>
+                    <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="50" data-credits="50" data-price="850">Adquirir</button>
                 </div>
-                <div class="credit-plan" data-pkg="120" style="grid-column: span 2; margin-top: 10px;">
+                <div class="credit-plan master-card" data-pkg="120">
                     <div class="plan-name">Paquete Master</div>
                     <div class="plan-amount">120 Créditos</div>
                     <div class="plan-price">$2,000 <small>MXN</small></div>
-                    <button class="buy-now-btn mp-buy-btn" data-pkg="120" data-price="2000">Adquirir</button>
+                    <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="120" data-credits="120" data-price="2000">Adquirir</button>
                 </div>
             </div>
             <p class="limit-note">Pagos procesados de forma segura por Mercado Pago.</p>
@@ -270,11 +270,11 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script type="module" src="app.js?v=8.0"></script>
+<script type="module" src="app.js?v=12.0"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js?v=8.0');
+            navigator.serviceWorker.register('./sw.js?v=12.0');
         });
     }
 </script>
