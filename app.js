@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    function switchView(viewId) {
+    window.switchView = function(viewId) {
         // Desactivar botones
         navButtons.forEach(b => b.classList.remove('active'));
         const activeBtn = document.querySelector(`.nav-btn[data-view="${viewId}"]`);
