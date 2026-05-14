@@ -1,12 +1,14 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    // Permitir todo en la colección usuarios para que el panel funcione sin login de Firebase
+    match /usuarios/{document=**} {
+      allow read, write, delete: if true;
     }
     
-    match /usuarios/{userId} {
-      allow create, read, delete: if true;
+    // Reglas normales para lo demás
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }

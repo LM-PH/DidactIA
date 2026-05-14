@@ -4,7 +4,6 @@ import json
 import google.generativeai as genai
 
 # Configura tu API Key como variable de entorno o búscala de forma segura
-import os
 apikey = os.environ.get("GEMINI_API_KEY", "") 
 genai.configure(api_key=apikey)
 
@@ -14,7 +13,7 @@ sample_file = genai.upload_file(path="Programa_Sintetico_Fase_6.pdf",
 
 print(f"Archivo subido: '{sample_file.display_name}'. Iniciando lectura y extracción (esto puede demorar un par de minutos)...")
 
-model = genai.GenerativeModel(model_name="gemini-2.5-flash")
+model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
 prompt = """
 Eres un asistente encargado de construir una base de datos estricta. El archivo que se te entregó es el Programa Sintético Fase 6 oficial de educación secundaria.
