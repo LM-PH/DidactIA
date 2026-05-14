@@ -1,6 +1,6 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { CONOCIMIENTO_NEM, DESCRIPCIONES_EJES } from './pedagogia.js';
 
 // Registrar PWA Service Worker
@@ -57,17 +57,33 @@ document.addEventListener('DOMContentLoaded', () => {
         // Obtener datos extendidos de Firestore
         let userDataFirestore = {};
         try {
-            const userDoc = await getDoc(doc(db, "usuarios", user.uid));
+            const userRef = doc(db, "usuarios", user.uid);
+            const userDoc = await getDoc(userRef);
+            
             if (userDoc.exists()) {
                 userDataFirestore = userDoc.data();
+            } else {
+                // Si no existe (usuario antiguo o error), lo creamos con valores por defecto
+                userDataFirestore = {
+                    uid: user.uid,
+                    nombre: user.displayName || user.email.split('@')[0],
+                    email: user.email,
+                    fotoPerfil: user.photoURL || "",
+                    proveedor: user.providerData[0]?.providerId || "password",
+                    creditos: 3,
+                    plan: "gratis",
+                    fechaRegistro: new Date().toISOString()
+                };
+                await setDoc(userRef, userDataFirestore);
+                console.log("Perfil de usuario creado automáticamente en el Dashboard.");
             }
         } catch (err) {
-            console.error("Error al obtener datos de usuario:", err);
+            console.error("Error al obtener/crear datos de usuario:", err);
         }
 
-        let nickname = userDataFirestore.nickname || user.displayName || user.email.split('@')[0];
+        let nickname = userDataFirestore.nombre || userDataFirestore.nickname || user.displayName || user.email.split('@')[0];
         let fotoPerfil = userDataFirestore.fotoPerfil || user.photoURL || "";
-        let creditos = userDataFirestore.creditos ?? "--";
+        let creditos = userDataFirestore.creditos ?? 3;
 
         USER_DATA = { 
             nickname, 
