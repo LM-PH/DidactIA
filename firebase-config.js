@@ -4,12 +4,12 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-aut
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCtKaQ3rZPxz4XJNnk3QCBTVhGiU4zQ-n0",
-    authDomain: "edu-lm.firebaseapp.com",
-    projectId: "edu-lm",
-    storageBucket: "edu-lm.firebasestorage.app",
-    messagingSenderId: "971708339984",
-    appId: "1:971708339984:web:9aa2217a389ff371dab795"
+    apiKey: "AIzaSyCNPodfCSZ0G3fy8rClQjNh7ixlveh3g9I",
+    authDomain: "didactia-app.firebaseapp.com",
+    projectId: "didactia-app",
+    storageBucket: "didactia-app.firebasestorage.app",
+    messagingSenderId: "1096182455883",
+    appId: "1:1096182455883:web:c866542328c444bf61b7ce"
 };
 
 const app = initializeApp(firebaseConfig);

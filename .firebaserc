@@ -1,5 +1,7 @@
 {
-  "projects": {},
+  "projects": {
+    "default": "didactia-app"
+  },
   "targets": {},
   "etags": {}
 }
