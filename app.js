@@ -1,6 +1,6 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { doc, getDoc, setDoc, collection, query, where, orderBy, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { CONOCIMIENTO_NEM, DESCRIPCIONES_EJES } from './pedagogia.js';
 
 // Registrar PWA Service Worker
@@ -36,7 +36,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadBtn = document.getElementById('download-btn');
     const finalizeBtn = document.getElementById('finalizar-btn');
     const newChatBtn = document.getElementById('new-chat-btn');
-    const userChip = document.getElementById('user-chip');
+    
+    // UI Elements para Créditos
+    const userMenuBtn = document.getElementById('user-menu-btn');
+    const userMenu = document.getElementById('user-menu');
+    const creditsModal = document.getElementById('credits-modal');
+    const historyModal = document.getElementById('history-modal');
+    const openHistoryBtn = document.getElementById('open-history');
+    const openCreditsBtn = document.getElementById('open-credits');
+    const closeHistoryBtn = document.getElementById('close-history');
+    const closeCreditsBtn = document.getElementById('close-credits');
+    const transactionsContainer = document.getElementById('transactions-container');
 
     let currentPlanningHtml = '';
     let conversationHistory = [];
@@ -48,81 +58,126 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         authGuard.style.display = 'none';
         
-        // Mostrar botón admin si es el correo autorizado
-        if (user.email === "zlagustin10@gmail.com") {
-            const adminBtn = document.getElementById('admin-link');
-            if (adminBtn) adminBtn.style.display = 'flex';
-        }
+        // Escuchar cambios en tiempo real del usuario (Créditos, Plan, etc)
+        const userRef = doc(db, "usuarios", user.uid);
+        onSnapshot(userRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                USER_DATA = { ...data, uid: user.uid };
+                
+                // Actualizar UI
+                userNicknameSpan.textContent = data.nombre || data.nickname || user.displayName || user.email.split('@')[0];
+                const creditsSpan = document.getElementById('user-credits');
+                if (creditsSpan) {
+                    creditsSpan.textContent = `Créditos: ${data.creditos ?? 0}`;
+                    if ((data.creditos ?? 0) <= 1) creditsSpan.style.color = "#E11D48";
+                    else creditsSpan.style.color = "";
+                }
+                
+                if (data.fotoPerfil) {
+                    userAvatarDiv.style.backgroundImage = `url(${data.fotoPerfil})`;
+                    userAvatarDiv.textContent = "";
+                } else {
+                    userAvatarDiv.style.backgroundImage = "none";
+                    userAvatarDiv.textContent = (data.nombre || user.email).charAt(0).toUpperCase();
+                }
 
-        // Obtener datos extendidos de Firestore
-        let userDataFirestore = {};
-        try {
-            const userRef = doc(db, "usuarios", user.uid);
-            const userDoc = await getDoc(userRef);
-            
-            if (userDoc.exists()) {
-                userDataFirestore = userDoc.data();
+                // Mostrar botón admin
+                if (user.email === "zlagustin10@gmail.com") {
+                    const adminBtn = document.getElementById('admin-link');
+                    if (adminBtn) adminBtn.style.display = 'flex';
+                }
+
+                if (chatMessages.children.length === 0) {
+                    addMessage(`¡Hola! 👋 Soy DidactIA. Vamos a crear una planeación 100% oficial de forma ordenada.\n\n**1. ¿Cuál es el nombre de tu escuela?**`, 'bot');
+                }
             } else {
-                // Si no existe (usuario antiguo o error), lo creamos con valores por defecto
-                userDataFirestore = {
+                setDoc(userRef, {
                     uid: user.uid,
                     nombre: user.displayName || user.email.split('@')[0],
                     email: user.email,
                     fotoPerfil: user.photoURL || "",
-                    proveedor: user.providerData[0]?.providerId || "password",
                     creditos: 3,
                     plan: "gratis",
                     fechaRegistro: new Date().toISOString()
-                };
-                await setDoc(userRef, userDataFirestore);
-                console.log("Perfil de usuario creado automáticamente en el Dashboard.");
+                });
             }
-        } catch (err) {
-            console.error("Error al obtener/crear datos de usuario:", err);
-        }
-
-        let nickname = userDataFirestore.nombre || userDataFirestore.nickname || user.displayName || user.email.split('@')[0];
-        let fotoPerfil = userDataFirestore.fotoPerfil || user.photoURL || "";
-        let creditos = userDataFirestore.creditos ?? 3;
-
-        USER_DATA = { 
-            nickname, 
-            email: user.email, 
-            uid: user.uid,
-            creditos: creditos,
-            plan: userDataFirestore.plan || "gratis"
-        };
-
-        userNicknameSpan.textContent = nickname;
-        const creditsSpan = document.getElementById('user-credits');
-        if (creditsSpan) creditsSpan.textContent = `Créditos: ${creditos}`;
-
-        if (fotoPerfil) {
-            userAvatarDiv.style.backgroundImage = `url(${fotoPerfil})`;
-            userAvatarDiv.textContent = "";
-        } else {
-            userAvatarDiv.style.backgroundImage = "none";
-            userAvatarDiv.textContent = nickname.charAt(0).toUpperCase();
-        }
-
-        if (chatMessages.children.length === 0) {
-            addMessage(`¡Hola, ${nickname}! 👋 Soy DidactIA. Vamos a crear una planeación 100% oficial de forma ordenada.\n\nEmpecemos con el Protocolo de 8 Pasos:\n\n**1. ¿Cuál es el nombre de tu escuela?**`, 'bot');
-        }
+        });
     });
 
+    // --- MANEJO DE UI (MENÚS Y MODALES) ---
+    userMenuBtn.onclick = (e) => { e.stopPropagation(); userMenu.classList.toggle('active'); };
+    document.onclick = () => userMenu.classList.remove('active');
+    
+    openHistoryBtn.onclick = () => { historyModal.classList.add('active'); loadTransactions(); };
+    openCreditsBtn.onclick = () => creditsModal.classList.add('active');
+    closeHistoryBtn.onclick = () => historyModal.classList.remove('active');
+    closeCreditsBtn.onclick = () => creditsModal.classList.remove('active');
     logoutBtn.onclick = () => signOut(auth);
+
+    async function loadTransactions() {
+        if (!USER_DATA?.uid) return;
+        transactionsContainer.innerHTML = '<p class="loading-text">Cargando...</p>';
+        
+        try {
+            const q = query(
+                collection(db, "transactions"),
+                where("uid", "==", USER_DATA.uid),
+                orderBy("fecha", "desc"),
+                limit(20)
+            );
+            
+            onSnapshot(q, (snapshot) => {
+                if (snapshot.empty) {
+                    transactionsContainer.innerHTML = '<p class="empty-text">No hay movimientos aún.</p>';
+                    return;
+                }
+                
+                let html = '';
+                snapshot.forEach(doc => {
+                    const tx = doc.data();
+                    const fecha = tx.fecha?.toDate().toLocaleDateString() || 'Reciente';
+                    const isPos = tx.creditos > 0;
+                    html += `
+                        <div class="transaction-item">
+                            <div class="tx-info">
+                                <h5>${tx.descripcion}</h5>
+                                <span>${fecha} • ${tx.tipo}</span>
+                            </div>
+                            <div class="tx-amount ${isPos ? 'pos' : 'neg'}">
+                                ${isPos ? '+' : ''}${tx.creditos}
+                            </div>
+                        </div>
+                    `;
+                });
+                transactionsContainer.innerHTML = html;
+            });
+        } catch (err) {
+            console.error(err);
+            transactionsContainer.innerHTML = '<p class="error-text">Error al cargar historial.</p>';
+        }
+    }
 
     async function handleSend() {
         if (!IS_LOADED) {
-            addMessage("Aún estoy cargando mis bases de datos oficiales. Por favor espera 3 segundos...", 'bot');
+            addMessage("Cargando bases de datos... Espera un momento.", 'bot');
             return;
         }
 
         const text = chatInput.value.trim();
         if (!text) return;
 
+        // Validar créditos localmente antes de enviar
+        if ((USER_DATA?.creditos ?? 0) <= 0) {
+            addMessage("⚠️ No tienes créditos suficientes. Por favor adquiere más para continuar.", 'bot');
+            creditsModal.classList.add('active');
+            return;
+        }
+
         addMessage(text, 'user');
         chatInput.value = '';
+        chatInput.disabled = true;
+        sendBtn.disabled = true;
         showTypingIndicator();
 
         try {
@@ -134,7 +189,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             removeTypingIndicator();
-            addMessage(`Error: ${error.message}`, 'bot');
+            if (error.message.includes('SIN_CREDITOS')) {
+                addMessage("⚠️ Se han agotado tus créditos durante la generación.", 'bot');
+                creditsModal.classList.add('active');
+            } else if (error.message.includes('LIMITE_DIARIO')) {
+                addMessage("⚠️ Has alcanzado el límite diario de 5 planeaciones para el plan gratuito.", 'bot');
+            } else {
+                addMessage(`Error: ${error.message}`, 'bot');
+            }
+        } finally {
+            chatInput.disabled = false;
+            sendBtn.disabled = false;
+            chatInput.focus();
         }
     }
 

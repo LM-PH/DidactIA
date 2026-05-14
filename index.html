@@ -33,21 +33,34 @@
         </div>
     </div>
     <div class="header-right">
-        <div class="user-chip" id="user-chip">
+        <div class="user-chip" id="user-menu-btn">
             <div class="user-avatar" id="user-avatar" style="background-size: cover; background-position: center;">?</div>
             <div class="user-info">
                 <span id="user-nickname">Cargando...</span>
                 <span id="user-credits" class="user-credits">Créditos: --</span>
             </div>
+            <!-- Menú desplegable -->
+            <div class="user-menu" id="user-menu">
+                <div class="menu-header">Mi Cuenta</div>
+                <div class="menu-item" id="open-history">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Historial
+                </div>
+                <div class="menu-item" id="open-credits">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    Comprar Créditos
+                </div>
+                <div class="menu-divider"></div>
+                <a href="admin.html" class="menu-item" id="admin-link" style="display:none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Panel Admin
+                </a>
+                <div class="menu-item logout" id="logout-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Cerrar sesión
+                </div>
+            </div>
         </div>
-        <a href="admin.html" class="logout-btn" id="admin-link" style="display:none; background: #6366f1; margin-right: 8px;" title="Panel de Administración">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Admin
-        </a>
-        <button class="logout-btn" id="logout-btn" title="Cerrar sesión">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Salir
-        </button>
     </div>
 </header>
 
@@ -103,8 +116,51 @@
     </section>
 </main>
 
+<!-- Modal: Historial -->
+<div id="history-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📜 Historial de Movimientos</h3>
+            <button class="close-btn" id="close-history">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="transactions-container" class="transactions-list">
+                <p class="loading-text">Cargando historial...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Créditos -->
+<div id="credits-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>💎 Cargar Créditos</h3>
+            <button class="close-btn" id="close-credits">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="credits-grid">
+                <div class="credit-plan">
+                    <h4>Básico</h4>
+                    <span class="price">5 Créditos</span>
+                    <p>Para tus planeaciones semanales.</p>
+                    <button class="buy-now-btn">Adquirir</button>
+                </div>
+                <div class="credit-plan featured">
+                    <div class="badge">Recomendado</div>
+                    <h4>Pro</h4>
+                    <span class="price">20 Créditos</span>
+                    <p>Ideal para todo el mes escolar.</p>
+                    <button class="buy-now-btn">Adquirir</button>
+                </div>
+            </div>
+            <p class="limit-note">Usuarios gratuitos: Máximo 5 planeaciones por día.</p>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script type="module" src="app.js?v=6.8"></script>
+<script type="module" src="app.js?v=7.2"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {

@@ -1,4 +1,20 @@
-// api/chat.js - DidactIA v6.5 (Sin Contexto ni Problematización)
+import admin from 'firebase-admin';
+
+// Inicializar Firebase Admin (solo una vez)
+if (!admin.apps.length) {
+    const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
+        ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) 
+        : null;
+
+    if (serviceAccount) {
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+    }
+}
+
+const db = admin.apps.length ? admin.firestore() : null;
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
@@ -6,7 +22,47 @@ export default async function handler(req, res) {
     const API_KEY = process.env.GEMINI_API_KEY;
 
     if (!API_KEY) {
-        return res.status(500).json({ error: 'La clave de API (GEMINI_API_KEY) no está configurada en el servidor.' });
+        return res.status(500).json({ error: 'La clave de API (GEMINI_API_KEY) no está configurada.' });
+    }
+
+    const uid = userData?.uid;
+    if (!uid) return res.status(401).json({ error: 'Usuario no identificado.' });
+
+    // --- VALIDACIÓN DE CRÉDITOS Y LÍMITES ---
+    let userDocRef = null;
+    let userSnapshot = null;
+
+    if (db) {
+        userDocRef = db.collection('usuarios').doc(uid);
+        userSnapshot = await userDocRef.get();
+
+        if (userSnapshot.exists) {
+            const data = userSnapshot.data();
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Validar Créditos
+            if ((data.creditos || 0) <= 0) {
+                return res.status(403).json({ 
+                    error: 'SIN_CREDITOS', 
+                    message: 'Te has quedado sin créditos. Por favor, adquiere más para continuar.' 
+                });
+            }
+
+            // Validar Límite Diario (Solo para usuarios gratuitos)
+            if (data.plan === 'gratis') {
+                const lastDate = data.lastGenerationDate || "";
+                let countToday = data.generationsToday || 0;
+
+                if (lastDate === today) {
+                    if (countToday >= 5) {
+                        return res.status(403).json({ 
+                            error: 'LIMITE_DIARIO', 
+                            message: 'Has alcanzado el límite de 5 planeaciones gratuitas por hoy. ¡Vuelve mañana o sube a Premium!' 
+                        });
+                    }
+                }
+            }
+        }
     }
 
     const SYSTEM_PROMPT = `Actúa como DidactIA, asistente experto en NEM (México).
@@ -29,8 +85,8 @@ FORMATO DE SALIDA (SÓLO 7 TABLAS HTML)
 ========================================
 Genera un <div id="planeacion-oficial"> con estas 7 tablas:
 1. DATOS GENERALES
-2. CONTENIDOS Y PROCESOS (Extraídos fielmente del texto)
-3. SECUENCIA DIDÁCTICA (Propuesta creativa de actividades)
+2. CONTENIDOS Y PROCESOS
+3. SECUENCIA DIDÁCTICA
 4. EVALUACIÓN
 5. RECURSOS
 6. ADECUACIONES
@@ -42,11 +98,11 @@ BASE DE DATOS (PROGRAMA SINTÉTICO)
 ${pedagogicalData?.programaText || 'Cargando...'}
 ${JSON.stringify(pedagogicalData?.ejes || {})}`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
     const payload = {
         contents: [
             { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
-            { role: "model", parts: [{ text: "Entendido. Protocolo de 8 pasos activo. He ELIMINADO Contexto y Problematización. Me limitaré a las 7 tablas oficiales usando solo datos reales del Programa Sintético." }] },
+            { role: "model", parts: [{ text: "Entendido. Protocolo de 8 pasos activo. He ELIMINADO Contexto y Problematización." }] },
             ...history,
             { role: "user", parts: [{ text: userMessage }] }
         ],
@@ -61,12 +117,46 @@ ${JSON.stringify(pedagogicalData?.ejes || {})}`;
         });
         const data = await response.json();
         
-        if (!response.ok) {
-            return res.status(response.status).json(data);
-        }
+        if (!response.ok) return res.status(response.status).json(data);
         
         if (!data.candidates || data.candidates.length === 0) {
-            return res.status(500).json({ error: 'La IA no devolvió ninguna respuesta. Revisa si hay filtros de seguridad activos.' });
+            return res.status(500).json({ error: 'La IA no devolvió ninguna respuesta.' });
+        }
+
+        const aiText = data.candidates[0].content.parts[0].text;
+        const isPlanningGenerated = aiText.includes('id="planeacion-oficial"') || aiText.includes('<table');
+
+        // --- CONSUMO DE CRÉDITO ---
+        if (db && isPlanningGenerated) {
+            const today = new Date().toISOString().split('T')[0];
+            
+            await db.runTransaction(async (t) => {
+                const snap = await t.get(userDocRef);
+                const userData = snap.data();
+                
+                const newCredits = (userData.creditos || 0) - 1;
+                const lastDate = userData.lastGenerationDate || "";
+                const newCountToday = (lastDate === today) ? (userData.generationsToday || 0) + 1 : 1;
+
+                // Actualizar Usuario
+                t.update(userDocRef, {
+                    creditos: Math.max(0, newCredits),
+                    generationsToday: newCountToday,
+                    lastGenerationDate: today
+                });
+
+                // Registrar Transacción
+                const txRef = db.collection('transactions').doc();
+                t.set(txRef, {
+                    uid: uid,
+                    tipo: 'uso',
+                    creditos: -1,
+                    descripcion: 'Generación de planeación didáctica',
+                    fecha: admin.firestore.FieldValue.serverTimestamp(),
+                    referencia: 'didactia_chat'
+                });
+            });
+            console.log(`Crédito descontado para el usuario ${uid}`);
         }
 
         res.status(200).json(data);
