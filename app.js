@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newChatBtn = document.getElementById('new-chat-btn');
     
     // --- ELEMENTOS UI PANEL ---
-    const sideButtons = document.querySelectorAll('.side-btn');
+    const navButtons = document.querySelectorAll('.nav-btn');
     const viewPanels = document.querySelectorAll('.view-panel');
     const miniAvatar = document.getElementById('mini-avatar');
     const miniName = document.getElementById('mini-name');
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let conversationHistory = [];
 
     // --- NAVEGACIÓN ENTRE VISTAS ---
-    sideButtons.forEach(btn => {
+    navButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const targetView = btn.getAttribute('data-view');
             switchView(targetView);
@@ -66,8 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function switchView(viewId) {
         // Desactivar botones
-        sideButtons.forEach(b => b.classList.remove('active'));
-        const activeBtn = document.querySelector(`.side-btn[data-view="${viewId}"]`);
+        navButtons.forEach(b => b.classList.remove('active'));
+        const activeBtn = document.querySelector(`.nav-btn[data-view="${viewId}"]`);
         if (activeBtn) activeBtn.classList.add('active');
 
         // Cambiar paneles
@@ -135,13 +135,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- MANEJO DE UI (HEADER Y LOGOUT) ---
+    const userMenuBtn = document.getElementById('user-menu-btn');
+    const userMenu = document.getElementById('user-menu');
+    
     if (userMenuBtn) {
         userMenuBtn.onclick = (e) => { 
             e.stopPropagation(); 
-            userMenu.classList.toggle('active'); 
+            userMenu.style.display = userMenu.style.display === 'flex' ? 'none' : 'flex'; 
         };
     }
-    document.addEventListener('click', () => { if (userMenu) userMenu.classList.remove('active'); });
+    document.addEventListener('click', () => { if (userMenu) userMenu.style.display = 'none'; });
     
     if (logoutBtn) logoutBtn.onclick = () => signOut(auth);
 

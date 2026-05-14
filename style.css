@@ -27,8 +27,6 @@ body {
     height: 100vh;
     width: 100vw;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
 }
 
 /* Header eliminado para maximizar espacio */
@@ -181,107 +179,142 @@ body {
 .menu-item.logout:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
 .menu-divider { height: 1px; background: rgba(255, 255, 255, 0.1); margin: 0.4rem 0; }
 
-/* --- LAYOUT SAAS --- */
+/* --- LAYOUT HORIZONTAL --- */
 .dashboard-layout {
     display: flex;
+    flex-direction: column;
     height: 100vh;
-    overflow: hidden;
-    background: #FFFFFF;
 }
 
-.app-sidebar {
-    width: 220px;
-    background: #F8FAFC;
-    border-right: 1px solid var(--border);
+.app-header-horizontal {
+    height: 64px;
+    background: white;
+    border-bottom: 1px solid var(--border);
     display: flex;
-    flex-direction: column;
-    padding: 0;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
     flex-shrink: 0;
+    z-index: 100;
 }
 
-.sidebar-top {
-    padding: 24px 16px 12px;
+.header-left {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.user-sidebar-card {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin: 0 12px 24px;
-}
-
-.user-sidebar-card:hover {
-    border-color: var(--primary);
-    box-shadow: var(--shadow-sm);
-}
-
-.user-menu {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    right: 0;
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    box-shadow: var(--shadow-md);
-    display: none;
-    flex-direction: column;
-    padding: 0.4rem;
-    z-index: 1000;
-}
-
-.sidebar-logo {
+.header-logo {
     width: 32px;
     height: 32px;
     border-radius: 8px;
 }
 
-.sidebar-brand {
-    font-size: 1.35rem;
+.header-brand {
+    font-size: 1.25rem;
     font-weight: 800;
     color: var(--primary);
     letter-spacing: -0.5px;
 }
 
-.side-btn {
+.header-nav {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 20px;
-    background: transparent;
-    border: none;
+    gap: 8px;
+    background: #F1F5F9;
+    padding: 4px;
     border-radius: 12px;
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: left;
 }
 
-.side-btn:hover {
-    background: var(--primary-light);
+.nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nav-btn:hover {
     color: var(--primary);
 }
 
-.side-btn.active {
-    background: var(--primary);
-    color: white;
-    box-shadow: 0 4px 12px rgba(79, 110, 247, 0.25);
+.nav-btn.active {
+    background: white;
+    color: var(--primary);
+    box-shadow: var(--shadow-sm);
 }
 
-.sidebar-footer {
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+.user-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.user-pill:hover {
+    border-color: var(--primary);
+}
+
+.user-avatar-small {
+    width: 28px;
+    height: 28px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+#user-nickname {
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.credits-badge {
+    font-size: 0.7rem;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    padding: 8px;
     display: none;
+    min-width: 150px;
+}
+
+.user-pill:hover .user-dropdown {
+    display: flex;
 }
 
 .mini-info {
@@ -310,7 +343,7 @@ body {
     flex-direction: column;
     position: relative;
     overflow: hidden;
-    height: 100vh;
+    height: calc(100vh - 64px);
 }
 
 /* --- VIEWS --- */
