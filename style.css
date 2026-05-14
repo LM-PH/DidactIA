@@ -402,11 +402,12 @@ body {
 
 .modal-body { padding: 1.5rem; }
 
-/* Credits Grid Horizontal */
+/* Credits Grid Horizontal FORZADO */
 .credits-grid { 
-    display: grid; 
-    grid-template-columns: repeat(3, 1fr); 
-    gap: 1.25rem; 
+    display: grid !important; 
+    grid-template-columns: repeat(3, 1fr) !important; 
+    gap: 1.5rem !important;
+    width: 100% !important;
 }
 .credit-plan {
     padding: 1.5rem 1rem;
