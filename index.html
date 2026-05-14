@@ -69,9 +69,8 @@
 <style>@keyframes pulse{0%,100%{opacity:0.6;transform:scale(1);}50%{opacity:1;transform:scale(1.08);}}</style>
 
 
-    <!-- VISTA 1: EDITOR (Chat + Visor) -->
-    <div id="view-editor" class="view-panel active">
-        <main class="app-main">
+    <div id="view-editor" class="view-panel active" style="display: flex; height: 100vh;">
+            <!-- Panel Izquierdo: Chat -->
             <!-- Panel Izquierdo: Chat -->
             <section class="chat-section">
                 <div class="section-header">
@@ -121,7 +120,6 @@
                     </button>
                 </div>
             </section>
-        </main>
     </div>
 
     <!-- VISTA 2: DASHBOARD (Perfil + Stats) -->
