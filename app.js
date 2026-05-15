@@ -3,12 +3,7 @@ import { onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.
 import { doc, getDoc, setDoc, deleteDoc, collection, query, where, orderBy, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { CONOCIMIENTO_NEM, DESCRIPCIONES_EJES } from './pedagogia.js';
 
-// Registrar PWA Service Worker
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=7.1')
-      .then(() => console.log("PWA Service Worker Registrado"))
-      .catch(err => console.error("Error al registrar SW:", err));
-}
+// DidactIA v15.0 - Sistema Desbloqueado
 
 let USER_DATA = null;
 let PROGRAMA_TEXT = "";
@@ -26,6 +21,15 @@ fetch('programa_sintetico.txt')
 // DidactIA v6.8 - Clean PDF Export Active
 document.addEventListener('DOMContentLoaded', () => {
     const authGuard = document.getElementById('auth-guard');
+    // DESBLOQUEO FORZADO v15.0
+    setTimeout(() => {
+        if (authGuard) {
+            authGuard.style.opacity = '0';
+            setTimeout(() => authGuard.style.display = 'none', 500);
+            console.log("🔓 Interfaz desbloqueada manualmente");
+        }
+    }, 1500);
+
     const userNicknameSpan = document.getElementById('user-nickname');
     const userAvatarDiv = document.getElementById('user-avatar');
     const logoutBtn = document.getElementById('logout-btn');
