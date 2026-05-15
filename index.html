@@ -187,6 +187,14 @@
             <div class="buy-credits-section">
                 <h3>🛒 Adquirir Créditos</h3>
                 <div class="credits-grid">
+                    <!-- PAQUETE DE PRUEBA -->
+                    <div class="credit-plan test-plan" style="border-style: dashed; background: #FFF9C4;">
+                        <div class="plan-name">Prueba</div>
+                        <div class="plan-amount">1 Crédito</div>
+                        <div class="plan-price">$1 <small>MXN</small></div>
+                        <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="test-1" data-credits="1" data-price="1">Probar $1</button>
+                    </div>
+
                     <div class="credit-plan" data-pkg="20">
                         <div class="plan-name">Inicial</div>
                         <div class="plan-amount">20 Créditos</div>
@@ -270,11 +278,11 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script type="module" src="app.js?v=17.0"></script>
+<script type="module" src="app.js?v=18.0"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js?v=17.0');
+            navigator.serviceWorker.register('./sw.js?v=18.0');
         });
     }
 </script>
