@@ -462,26 +462,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- INTEGRACIÓN MERCADO PAGO GLOBAL ---
+    // --- INTEGRACIÓN MERCADO PAGO GLOBAL (CON DIAGNÓSTICO) ---
     window.comprarCreditos = async function(btn) {
-        console.log("Iniciando compra para:", btn.getAttribute('data-pkg'));
-        
-        if (!USER_DATA) {
-            alert("Por favor, inicia sesión para comprar créditos.");
-            return;
-        }
+        console.log("--- INICIANDO PROCESO DE COMPRA ---");
         
         const pkgId = btn.getAttribute('data-pkg');
         const credits = btn.getAttribute('data-credits');
         const price = btn.getAttribute('data-price');
+        
+        console.log("Datos capturados:", { pkgId, credits, price, user: USER_DATA?.email });
 
-        // Desactivar botón y mostrar carga
-        const originalText = btn.innerText;
-        btn.innerText = "Procesando...";
+        if (!USER_DATA) {
+            alert("⚠️ Error: Debes iniciar sesión para realizar compras.");
+            return;
+        }
+
+        // Feedback visual inmediato
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `
+            <svg class="spinner" width="18" height="18" viewBox="0 0 24 24" style="animation: spin 1s linear infinite; margin-right: 8px;">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" style="opacity: 0.25;"></circle>
+                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg> Conectando...
+        `;
         btn.disabled = true;
-        btn.style.opacity = "0.7";
 
         try {
+            console.log("Enviando petición a /api/create-preference...");
             const response = await fetch('/api/create-preference', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -495,17 +502,23 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const result = await response.json();
+            console.log("Respuesta del servidor:", result);
+
             if (result.init_point) {
-                window.location.href = result.init_point;
+                console.log("Redirigiendo a Mercado Pago:", result.init_point);
+                window.location.assign(result.init_point);
             } else {
-                throw new Error(result.error || "Error al generar el pago");
+                const errorMsg = result.error || "El servidor no devolvió un link de pago.";
+                console.error("Fallo en la respuesta:", errorMsg);
+                alert(`❌ No se pudo generar el pago:\n${errorMsg}\n\nVerifica que tus credenciales de Mercado Pago estén configuradas en el servidor.`);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         } catch (error) {
-            console.error("Error MP:", error);
-            alert("Ocurrió un error al conectar con Mercado Pago. Por favor intenta de nuevo.");
-            btn.innerText = originalText;
+            console.error("Error crítico en fetch:", error);
+            alert(`⚠️ Error de conexión:\nNo se pudo contactar con el servidor de pagos. Detalles: ${error.message}`);
+            btn.innerHTML = originalText;
             btn.disabled = false;
-            btn.style.opacity = "1";
         }
     };
 
