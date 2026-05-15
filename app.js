@@ -5,6 +5,61 @@ import { CONOCIMIENTO_NEM, DESCRIPCIONES_EJES } from './pedagogia.js';
 
 // DidactIA v15.0 - Sistema Desbloqueado
 
+console.log("--- DIDACTIA v17.0 INICIANDO ---");
+// Prueba de vida instantánea
+window.SISTEMA_CARGADO = true;
+
+// --- FUNCIONES GLOBALES DE EMERGENCIA (FUERA DE TODO) ---
+window.switchView = function(viewId) {
+    console.log("Cambiando a vista:", viewId);
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const viewPanels = document.querySelectorAll('.view-panel');
+    
+    navButtons.forEach(b => b.classList.remove('active'));
+    const activeBtn = document.querySelector(`.nav-btn[data-view="${viewId}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+
+    viewPanels.forEach(p => p.classList.remove('active'));
+    const activePanel = document.getElementById(`view-${viewId}`);
+    if (activePanel) activePanel.classList.add('active');
+};
+
+window.comprarCreditos = async function(btn) {
+    console.log("--- CLIC EN ADQUIRIR DETECTADO ---");
+    const pkgId = btn.getAttribute('data-pkg');
+    const credits = btn.getAttribute('data-credits');
+    const price = btn.getAttribute('data-price');
+    
+    if (!USER_DATA) {
+        alert("⚠️ Por favor, inicia sesión para comprar créditos.");
+        return;
+    }
+
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "Conectando...";
+    btn.disabled = true;
+
+    try {
+        const response = await fetch('/api/create-preference', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pkgId, credits, price, uid: USER_DATA.uid, email: USER_DATA.email })
+        });
+        const result = await response.json();
+        if (result.init_point) {
+            window.location.assign(result.init_point);
+        } else {
+            alert("Error: " + (result.error || "No se generó el link"));
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    } catch (e) {
+        alert("Error de conexión con el servidor");
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+};
+
 let USER_DATA = null;
 let PROGRAMA_TEXT = "";
 let IS_LOADED = false;
