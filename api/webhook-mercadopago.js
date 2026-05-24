@@ -1,14 +1,24 @@
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import admin from 'firebase-admin';
 
-// Inicializar Firebase Admin si no está inicializado
-if (!admin.apps.length) {
-    admin.initializeApp({
-        credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))
-    });
-}
+let db = null;
+let firebaseInitError = null;
 
-const db = admin.firestore();
+try {
+    // Inicializar Firebase Admin si no está inicializado
+    if (!admin.apps.length) {
+        const serviceAccountStr = process.env.FIREBASE_SERVICE_ACCOUNT;
+        if (serviceAccountStr) {
+            admin.initializeApp({
+                credential: admin.credential.cert(JSON.parse(serviceAccountStr))
+            });
+        }
+    }
+    db = admin.apps.length ? admin.firestore() : null;
+} catch (error) {
+    console.error("Error al inicializar Firebase Admin en webhook:", error);
+    firebaseInitError = error.message;
+}
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).send('Method not allowed');

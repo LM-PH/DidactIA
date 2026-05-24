@@ -1,22 +1,31 @@
 import admin from 'firebase-admin';
 
-// Inicializar Firebase Admin (solo una vez)
-if (!admin.apps.length) {
-    const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
-        ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) 
-        : null;
+let db = null;
+let firebaseInitError = null;
 
-    if (serviceAccount) {
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount)
-        });
+try {
+    // Inicializar Firebase Admin (solo una vez)
+    if (!admin.apps.length) {
+        const serviceAccountStr = process.env.FIREBASE_SERVICE_ACCOUNT;
+        if (serviceAccountStr) {
+            const serviceAccount = JSON.parse(serviceAccountStr);
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount)
+            });
+        }
     }
+    db = admin.apps.length ? admin.firestore() : null;
+} catch (error) {
+    console.error("Error al inicializar Firebase Admin:", error);
+    firebaseInitError = error.message;
 }
-
-const db = admin.apps.length ? admin.firestore() : null;
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
+
+    if (firebaseInitError) {
+        return res.status(500).json({ error: `Error de configuración del servidor (Firebase): ${firebaseInitError}` });
+    }
 
     const { history, userMessage, pedagogicalData, userData } = req.body;
     const API_KEY = process.env.GEMINI_API_KEY;
