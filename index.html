@@ -187,32 +187,27 @@
             <div class="buy-credits-section">
                 <h3>🛒 Adquirir Créditos</h3>
                 <div class="credits-grid">
-                    <!-- PAQUETE DE PRUEBA (Mínimo para tarjetas) -->
-                    <div class="credit-plan test-plan" style="border-style: dashed; background: #FFF9C4;">
-                        <div class="plan-name">Prueba Real</div>
+                    <!-- PAQUETE BÁSICO -->
+                    <div class="credit-plan test-plan" style="border-style: dashed; background: #FFF9C4;" data-pkg="1">
+                        <div class="plan-name">Prueba</div>
                         <div class="plan-amount">1 Crédito</div>
-                        <div class="plan-price">$10 <small>MXN</small></div>
-                        <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="test-1" data-credits="1" data-price="10">Probar $10</button>
+                        <div class="plan-price">$20 <small>MXN</small></div>
+                        <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="test-1" data-credits="1" data-price="20">Adquirir $20</button>
                     </div>
 
                     <div class="credit-plan" data-pkg="20">
                         <div class="plan-name">Inicial</div>
                         <div class="plan-amount">20 Créditos</div>
-                        <div class="plan-price">$400 <small>MXN</small></div>
-                        <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="20" data-credits="20" data-price="400">Adquirir</button>
+                        <div class="plan-price">$300 <small>MXN</small></div>
+                        <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="20" data-credits="20" data-price="300">Adquirir</button>
                     </div>
+
                     <div class="credit-plan popular" data-pkg="50">
                         <div class="plan-badge">MÁS ELEGIDO</div>
                         <div class="plan-name">Pro</div>
                         <div class="plan-amount">50 Créditos</div>
-                        <div class="plan-price">$850 <small>MXN</small></div>
-                        <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="50" data-credits="50" data-price="850">Adquirir</button>
-                    </div>
-                    <div class="credit-plan" data-pkg="120">
-                        <div class="plan-name">Master</div>
-                        <div class="plan-amount">120 Créditos</div>
-                        <div class="plan-price">$2,000 <small>MXN</small></div>
-                        <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="120" data-credits="120" data-price="2000">Adquirir</button>
+                        <div class="plan-price">$550 <small>MXN</small></div>
+                        <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="50" data-credits="50" data-price="550">Adquirir</button>
                     </div>
                 </div>
             </div>
@@ -252,24 +247,24 @@
         </div>
         <div class="modal-body">
             <div class="credits-grid">
+                <div class="credit-plan test-plan" style="border-style: dashed; background: #FFF9C4;" data-pkg="1">
+                    <div class="plan-name">Paquete Prueba</div>
+                    <div class="plan-amount">1 Crédito</div>
+                    <div class="plan-price">$20 <small>MXN</small></div>
+                    <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="test-1" data-credits="1" data-price="20">Adquirir</button>
+                </div>
                 <div class="credit-plan" data-pkg="20">
                     <div class="plan-name">Paquete Inicial</div>
                     <div class="plan-amount">20 Créditos</div>
-                    <div class="plan-price">$400 <small>MXN</small></div>
-                    <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="20" data-credits="20" data-price="400">Adquirir</button>
+                    <div class="plan-price">$300 <small>MXN</small></div>
+                    <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="20" data-credits="20" data-price="300">Adquirir</button>
                 </div>
                 <div class="credit-plan featured" data-pkg="50">
                     <div class="plan-badge">RECOMENDADO</div>
                     <div class="plan-name">Paquete Pro</div>
                     <div class="plan-amount">50 Créditos</div>
-                    <div class="plan-price">$850 <small>MXN</small></div>
-                    <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="50" data-credits="50" data-price="850">Adquirir</button>
-                </div>
-                <div class="credit-plan master-card" data-pkg="120">
-                    <div class="plan-name">Paquete Master</div>
-                    <div class="plan-amount">120 Créditos</div>
-                    <div class="plan-price">$2,000 <small>MXN</small></div>
-                    <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="120" data-credits="120" data-price="2000">Adquirir</button>
+                    <div class="plan-price">$550 <small>MXN</small></div>
+                    <button class="buy-now-btn mp-buy-btn" onclick="comprarCreditos(this)" data-pkg="50" data-credits="50" data-price="550">Adquirir</button>
                 </div>
             </div>
             <p class="limit-note">Pagos procesados de forma segura por Mercado Pago.</p>
