@@ -104,14 +104,30 @@ ${JSON.stringify(pedagogicalData?.ejes || {})}`;
     };
 
     try {
-        const response = await fetch(url, {
+        let response;
+        let data;
+        let maxRetries = 3;
+        let delay = 2000;
+
+    for (let i = 0; i < maxRetries; i++) {
+        response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        const data = await response.json();
-        
-        if (!response.ok) return res.status(response.status).json(data);
+        data = await response.json();
+
+        if (response.ok) {
+            break; // Éxito, salir del bucle
+        } else if (response.status === 503 && i < maxRetries - 1) {
+            // Si es error 503 (High Demand), esperar y reintentar
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 1.5; // Backoff exponencial
+        } else {
+            // Si es otro error o se acabaron los intentos, devolver el error
+            return res.status(response.status).json(data);
+        }
+    }
         
         if (!data.candidates || data.candidates.length === 0) {
             return res.status(500).json({ error: 'La IA no devolvió ninguna respuesta.' });
