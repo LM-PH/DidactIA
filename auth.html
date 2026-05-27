@@ -128,20 +128,9 @@
         particlesEl.appendChild(p);
     }
 
-    // Generar contraseña sugerida
-    function generatePassword() {
-        const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
-        return Array.from({length: 10}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-    }
-    const suggestedPwd = generatePassword();
-    document.getElementById('suggested-password').textContent = suggestedPwd;
-
     // Exponer funciones al window
     window.switchTab = (tab) => {
-        document.getElementById('form-login').classList.toggle('visible', tab === 'login');
-        document.getElementById('form-register').classList.toggle('visible', tab === 'register');
-        document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-        document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+        // Obsoleto, pero se mantiene para no romper adminQuickLogin
         hideMessage();
     };
 
@@ -150,13 +139,7 @@
         input.type = input.type === 'password' ? 'text' : 'password';
     };
 
-    window.useSuggestedPassword = () => {
-        const pwd = document.getElementById('suggested-password').textContent;
-        const input = document.getElementById('reg-password');
-        input.value = pwd;
-        input.type = 'text';
-        showMessage('success', `✅ Contraseña "${pwd}" aplicada. ¡Guárdala en un lugar seguro!`);
-    };
+
 
     window.adminQuickLogin = () => {
         switchTab('login');
@@ -165,26 +148,7 @@
         showMessage('info', 'Por favor, ingresa tus credenciales de administrador.');
     };
 
-    window.generateNickname = (fullName) => {
-        const parts = fullName.trim().split(' ');
-        let nick = '';
-        if (parts.length >= 2) {
-            nick = parts[0] + ' ' + parts[1];
-        } else {
-            nick = parts[0] || '';
-        }
-        if (nick.toLowerCase().startsWith('profe') || nick.toLowerCase().startsWith('prof')) {
-            nick = nick;
-        }
-        document.getElementById('reg-nickname').value = nick;
-        const preview = document.getElementById('nickname-preview');
-        if (nick.length > 2) {
-            preview.textContent = `DidactIA te llamará "${nick}" 👆`;
-            preview.classList.add('visible');
-        } else {
-            preview.classList.remove('visible');
-        }
-    };
+
 
     function showMessage(type, text) {
         const el = document.getElementById('auth-message');
