@@ -13,6 +13,15 @@
     <meta name="apple-mobile-web-app-title" content="DidactIA">
     <link rel="apple-touch-icon" href="logo.png">
     <link rel="stylesheet" href="auth.css">
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
 </head>
 <body>
 
@@ -79,7 +88,7 @@
         </button>
 
         <div class="auth-footer">
-            <p>Al registrarte, aceptas usar esta herramienta con fines educativos 📚</p>
+            <p>Al registrarte, aceptas nuestros <a href="legal.html" style="color:#818cf8; text-decoration:none;">Términos de Uso y Privacidad</a> 📚</p>
             <div style="margin-top: 15px; border-top: 1px solid #334155; padding-top: 15px;">
                 <button onclick="window.location.href='admin.html'" style="background:transparent; border:1px solid #6366f1; color:#6366f1; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:12px; transition:0.3s;">
                     🔐 Acceso Administrativo
@@ -207,6 +216,24 @@
                     fechaRegistro: new Date().toISOString(),
                     uid: user.uid
                 });
+
+                // Send Welcome Email via Vercel Function
+                fetch('/api/send-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: user.email,
+                        subject: '¡Bienvenido a DidactIA! 🍎',
+                        html: `<div style="font-family:sans-serif; padding:20px; text-align:center;">
+                            <h2>¡Hola, ${(user.displayName || "Docente").split(' ')[0]}!</h2>
+                            <p>Te damos la bienvenida a <strong>DidactIA</strong>, tu asistente de planeaciones.</p>
+                            <p>Hemos añadido <strong>1 crédito de regalo</strong> a tu cuenta para que pruebes nuestra tecnología.</p>
+                            <p>¡Esperamos que te sea de muchísima utilidad!</p>
+                            <a href="https://didactia.app" style="display:inline-block; padding:10px 20px; background:#4F46E5; color:white; text-decoration:none; border-radius:5px; margin-top:20px;">Comenzar a planear</a>
+                        </div>`
+                    })
+                }).catch(err => console.error("Error enviando bienvenida:", err));
+
             } else {
                 // Si ya existe, actualizamos solo la foto si cambió
                 await setDoc(userDocRef, { 
@@ -214,6 +241,9 @@
                 }, { merge: true });
             }
             
+            // Analytics
+            if (typeof gtag === 'function') gtag('event', 'login_success', { 'method': 'google' });
+
             showMessage('success', `🎉 ¡Bienvenido/a, ${user.displayName}! Entrando...`);
             setTimeout(() => window.location.href = 'index.html', 1000);
         } catch (err) {

@@ -5,6 +5,7 @@
   "type": "module",
   "dependencies": {
     "firebase-admin": "^12.1.0",
-    "mercadopago": "^2.0.11"
+    "mercadopago": "^2.0.11",
+    "resend": "^6.12.4"
   }
 }

@@ -1,6 +1,6 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { doc, getDoc, setDoc, deleteDoc, collection, query, where, orderBy, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { doc, getDoc, setDoc, deleteDoc, addDoc, collection, query, where, orderBy, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { CONOCIMIENTO_NEM, DESCRIPCIONES_EJES } from './pedagogia.js';
 
 // DidactIA v15.0 - Sistema Desbloqueado
@@ -169,12 +169,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Actualizar Dashboard (Perfil)
-                if (profileName) profileName.textContent = data.nombre || data.nickname || user.displayName || user.email.split('@')[0];
-                if (profileEmail) profileEmail.textContent = user.email || data.email;
-                if (profilePlanBadge) profilePlanBadge.textContent = data.plan === 'premium' ? 'Plan Premium' : 'Plan Gratis';
-                if (statCredits) statCredits.textContent = data.creditos ?? 0;
-                if (statTotalPlans) statTotalPlans.textContent = data.totalPlaneaciones ?? 0;
+                if (profileName) {
+                    profileName.textContent = data.nombre || data.nickname || user.displayName || user.email.split('@')[0];
+                    profileName.classList.remove('skeleton', 'skeleton-text');
+                }
+                if (profileEmail) {
+                    profileEmail.textContent = user.email || data.email;
+                    profileEmail.classList.remove('skeleton', 'skeleton-text');
+                }
+                if (profilePlanBadge) {
+                    profilePlanBadge.textContent = data.plan === 'premium' ? 'Plan Premium' : 'Plan Gratis';
+                    profilePlanBadge.classList.remove('skeleton');
+                }
+                if (statCredits) {
+                    statCredits.textContent = data.creditos ?? 0;
+                    statCredits.classList.remove('skeleton');
+                }
+                if (statTotalPlans) {
+                    statTotalPlans.textContent = data.totalPlaneaciones ?? 0;
+                    statTotalPlans.classList.remove('skeleton');
+                }
                 if (profileAvatarLarge) {
+                    profileAvatarLarge.classList.remove('skeleton-avatar');
                     if (data.fotoPerfil) {
                         profileAvatarLarge.style.backgroundImage = `url(${data.fotoPerfil})`;
                         profileAvatarLarge.textContent = "";
@@ -243,12 +259,16 @@ document.addEventListener('DOMContentLoaded', () => {
         sendBtn.disabled = true;
         showTypingIndicator();
 
+        // Analytics
+        if (typeof gtag === 'function') gtag('event', 'generate_plan_started');
+
         try {
             const response = await callGeminiAPI(text);
             removeTypingIndicator();
             addMessage(response.text, 'bot');
             if (response.html) {
                 updateViewer(response.html);
+                if (typeof gtag === 'function') gtag('event', 'generate_plan_success');
             }
         } catch (error) {
             removeTypingIndicator();
@@ -483,6 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.disabled = true;
 
         try {
+            if (typeof gtag === 'function') gtag('event', 'checkout_started', { value: price, currency: 'MXN', items: [{ item_id: pkgId }] });
             console.log("Enviando petición a /api/create-preference...");
             const response = await fetch('/api/create-preference', {
                 method: 'POST',
@@ -543,3 +564,32 @@ document.addEventListener('DOMContentLoaded', () => {
     window.onclick = (event) => {
         if (event.target == creditsModal) creditsModal.classList.remove('active');
     }
+
+    // FEEDBACK
+    window.sendFeedback = async () => {
+        const textEl = document.getElementById('feedback-text');
+        const btn = document.querySelector('.feedback-modal .btn-primary');
+        const text = textEl.value.trim();
+        if (!text) return alert("Por favor escribe algo antes de enviar.");
+        
+        btn.textContent = "Enviando...";
+        btn.disabled = true;
+
+        try {
+            await addDoc(collection(db, "feedback"), {
+                uid: USER_DATA?.uid || 'anon',
+                email: USER_DATA?.email || 'anon',
+                mensaje: text,
+                fecha: new Date().toISOString()
+            });
+            alert("¡Gracias por tu sugerencia! La revisaremos pronto.");
+            textEl.value = "";
+            document.getElementById('feedback-modal').classList.remove('active');
+        } catch (e) {
+            console.error("Error al enviar feedback", e);
+            alert("Hubo un error al enviar tu mensaje. Intenta de nuevo.");
+        } finally {
+            btn.textContent = "Enviar sugerencia";
+            btn.disabled = false;
+        }
+    };

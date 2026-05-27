@@ -70,6 +70,28 @@ export default async function handler(req, res) {
                             monto: paymentData.transaction_amount,
                             metodo: paymentData.payment_method_id
                         });
+                        
+                        // Enviar recibo por correo fuera de la transacción (para evitar reintentos si falla algo interno)
+                        if (process.env.RESEND_API_KEY && userSnap.data().email) {
+                            fetch('https://api.resend.com/emails', {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    from: 'DidactIA <hola@didactia.app>',
+                                    to: [userSnap.data().email],
+                                    subject: 'Recibo de Compra - DidactIA',
+                                    html: `<div style="font-family:sans-serif; padding:20px; text-align:center;">
+                                        <h2>¡Gracias por tu compra!</h2>
+                                        <p>Hemos añadido <strong>${creditsToAdd} créditos</strong> a tu cuenta exitosamente.</p>
+                                        <p>Monto pagado: $${paymentData.transaction_amount} MXN</p>
+                                        <p>Sigue creando planeaciones increíbles en <a href="https://didactia.app">DidactIA</a>.</p>
+                                    </div>`
+                                })
+                            }).catch(err => console.error("Error enviando correo de recibo:", err));
+                        }
                     });
 
                     console.log(`Pago aprobado: ${creditsToAdd} créditos añadidos a ${uid}`);
