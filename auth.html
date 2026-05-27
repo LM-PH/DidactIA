@@ -36,8 +36,7 @@
 
         <!-- Tabs -->
         <div class="auth-tabs">
-            <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Iniciar Sesión</button>
-            <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Registrarse</button>
+            <button class="tab-btn active" id="tab-login" style="width: 100%; pointer-events: none;">Iniciar Sesión</button>
         </div>
 
         <!-- Formulario Login -->
@@ -61,39 +60,6 @@
             </button>
         </form>
 
-        <!-- Formulario Registro -->
-        <form class="auth-form" id="form-register" onsubmit="handleRegister(event)">
-            <div class="form-group">
-                <label class="form-label">Nombre completo</label>
-                <input type="text" id="reg-name" class="form-input" placeholder="Ej. Profa. Elena García" required oninput="generateNickname(this.value)">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Nickname para DidactIA</label>
-                <input type="text" id="reg-nickname" class="form-input" placeholder="Se generará automáticamente" required>
-                <span class="nickname-preview" id="nickname-preview">DidactIA te llamará así 👆</span>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Correo electrónico</label>
-                <input type="email" id="reg-email" class="form-input" placeholder="profe@escuela.edu.mx" required autocomplete="email">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Contraseña</label>
-                <div class="password-suggestion" onclick="useSuggestedPassword()" title="Clic para usar esta contraseña">
-                    💡 Sugerida: <span id="suggested-password"></span>
-                    <small style="color:var(--muted)">← Clic para usar</small>
-                </div>
-                <div class="password-wrapper" style="margin-top: 8px;">
-                    <input type="password" id="reg-password" class="form-input" placeholder="O escribe la tuya (mín. 8 caracteres)" required minlength="8" autocomplete="new-password">
-                    <button type="button" class="toggle-password" onclick="togglePassword('reg-password')">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    </button>
-                </div>
-            </div>
-            <button type="submit" class="auth-btn" id="register-btn">
-                <span class="btn-text">Crear mi cuenta →</span>
-                <div class="spinner"></div>
-            </button>
-        </form>
 
         <!-- Divisor -->
         <div class="auth-divider">
