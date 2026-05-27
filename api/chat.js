@@ -124,7 +124,7 @@ ${JSON.stringify(pedagogicalData?.ejes || {})}`;
         if (db && isPlanningGenerated) {
             await db.runTransaction(async (t) => {
                 const snap = await t.get(userDocRef);
-                const userData = snap.data();
+                const userData = snap.exists ? snap.data() : { creditos: 0, totalPlaneaciones: 0 };
                 
                 const newCredits = (userData.creditos || 0) - 1;
                 const totalGenerated = (userData.totalPlaneaciones || 0) + 1;
@@ -140,10 +140,18 @@ ${JSON.stringify(pedagogicalData?.ejes || {})}`;
                 const titulo = `${tema} - ${asignatura} ${grado}`.trim();
 
                 // Actualizar Usuario
-                t.update(userDocRef, {
-                    creditos: Math.max(0, newCredits),
-                    totalPlaneaciones: totalGenerated
-                });
+                if (snap.exists) {
+                    t.update(userDocRef, {
+                        creditos: Math.max(0, newCredits),
+                        totalPlaneaciones: totalGenerated
+                    });
+                } else {
+                    t.set(userDocRef, {
+                        creditos: Math.max(0, newCredits),
+                        totalPlaneaciones: totalGenerated,
+                        createdAt: admin.firestore.FieldValue.serverTimestamp()
+                    });
+                }
 
                 // Guardar Planeación
                 const planRef = db.collection('planeaciones').doc();
