@@ -108,7 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const profilePlanBadge = document.getElementById('profile-plan-badge');
     const statCredits = document.getElementById('stat-credits');
     const statTotalPlans = document.getElementById('stat-total-plans');
-    const plansListContainer = document.getElementById('plans-list-container');
     const creditsHistoryContainer = document.getElementById('credits-history-container');
     const searchPlansInput = document.getElementById('search-plans');
 
@@ -135,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activePanel) activePanel.classList.add('active');
 
         // Acciones específicas
-        if (viewId === 'planeaciones') loadMyPlannings();
         if (viewId === 'credits') loadCreditsHistory();
     }
 
@@ -170,6 +168,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     userAvatarDiv.textContent = (data.nombre || user.email).charAt(0).toUpperCase();
                 }
 
+                // Actualizar Dashboard (Perfil)
+                if (profileName) profileName.textContent = data.nombre || data.nickname || user.displayName || user.email.split('@')[0];
+                if (profileEmail) profileEmail.textContent = user.email || data.email;
+                if (profilePlanBadge) profilePlanBadge.textContent = data.plan === 'premium' ? 'Plan Premium' : 'Plan Gratis';
+                if (statCredits) statCredits.textContent = data.creditos ?? 0;
+                if (statTotalPlans) statTotalPlans.textContent = data.totalPlaneaciones ?? 0;
+                if (profileAvatarLarge) {
+                    if (data.fotoPerfil) {
+                        profileAvatarLarge.style.backgroundImage = `url(${data.fotoPerfil})`;
+                        profileAvatarLarge.textContent = "";
+                    } else {
+                        profileAvatarLarge.style.backgroundImage = "none";
+                        profileAvatarLarge.textContent = (data.nombre || user.email).charAt(0).toUpperCase();
+                    }
+                }
+
                 // Mostrar botón admin
                 if (user.email === "zlagustin10@gmail.com") {
                     const adminBtn = document.getElementById('admin-link');
@@ -185,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     nombre: user.displayName || user.email.split('@')[0],
                     email: user.email,
                     fotoPerfil: user.photoURL || "",
-                    creditos: 3,
+                    creditos: 1,
                     plan: "gratis",
                     fechaRegistro: new Date().toISOString()
                 });
@@ -373,85 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- FUNCIONES DE CARGA DE DATOS ---
 
-    async function loadMyPlannings() {
-        if (!USER_DATA?.uid) return;
-        plansListContainer.innerHTML = '<p class="loading-text">Cargando tus planeaciones...</p>';
-        
-        try {
-            const q = query(
-                collection(db, "planeaciones"),
-                where("uid", "==", USER_DATA.uid),
-                orderBy("fechaCreacion", "desc")
-            );
-            
-            onSnapshot(q, (snapshot) => {
-                if (snapshot.empty) {
-                    plansListContainer.innerHTML = '<div class="viewer-placeholder"><h3>No tienes planeaciones</h3><p>Genera tu primera planeación en el Editor.</p></div>';
-                    return;
-                }
-                
-                plansListContainer.innerHTML = "";
-                snapshot.forEach(docSnap => {
-                    const plan = docSnap.data();
-                    const card = createPlanCard(docSnap.id, plan);
-                    plansListContainer.appendChild(card);
-                });
-            });
-        } catch (error) {
-            console.error("Error al cargar planeaciones:", error);
-        }
-    }
 
-    function createPlanCard(id, plan) {
-        const div = document.createElement('div');
-        div.className = 'plan-item-card';
-        const date = plan.fechaCreacion ? plan.fechaCreacion.toDate().toLocaleDateString() : 'Reciente';
-        
-        div.innerHTML = `
-            <div class="plan-card-header">
-                <div>
-                    <h4 class="plan-card-title">${plan.titulo || 'Sin título'}</h4>
-                    <div class="plan-card-meta">
-                        <span>📅 ${date}</span>
-                        <span>📚 ${plan.asignatura || 'General'}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="plan-card-actions">
-                <button class="btn-icon-sm open-btn" title="Abrir">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                </button>
-                <button class="btn-icon-sm copy-btn" title="Copiar">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                </button>
-                <button class="btn-icon-sm delete delete-btn" title="Eliminar">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                </button>
-            </div>
-        `;
-
-        div.querySelector('.open-btn').onclick = () => {
-            currentPlanningHtml = plan.contenido;
-            contentViewer.innerHTML = plan.contenido;
-            switchView('editor');
-        };
-
-        div.querySelector('.copy-btn').onclick = () => {
-            const text = contentViewer.innerText; // Fallback or use a hidden div
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = plan.contenido;
-            const plainText = tempDiv.innerText;
-            navigator.clipboard.writeText(plainText).then(() => alert("Copiado al portapapeles"));
-        };
-
-        div.querySelector('.delete-btn').onclick = async () => {
-            if (confirm("¿Estás seguro de eliminar esta planeación?")) {
-                await deleteDoc(doc(db, "planeaciones", id));
-            }
-        };
-
-        return div;
-    }
 
     async function loadCreditsHistory() {
         if (!USER_DATA?.uid) return;
