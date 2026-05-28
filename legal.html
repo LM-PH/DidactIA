@@ -16,8 +16,14 @@
       gtag('config', 'G-XXXXXXXXXX');
     </script>
     <style>
+        body {
+            overflow-y: auto !important; /* Permitir scroll */
+            padding: 20px;
+            display: block !important; /* Quitar flex center si es necesario, o mantenerlo pero dejar scroll */
+        }
         .legal-container {
             max-width: 800px;
+            width: 100%;
             margin: 40px auto;
             padding: 40px;
             background: rgba(30, 41, 59, 0.7);
@@ -25,6 +31,8 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             color: #e2e8f0;
+            position: relative;
+            z-index: 10;
         }
         .legal-header {
             text-align: center;
@@ -84,6 +92,24 @@
         }
         .back-btn:hover {
             color: #a5b4fc;
+        }
+
+        /* Responsive Mobile */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .legal-container {
+                margin: 20px auto;
+                padding: 20px;
+                border-radius: 12px;
+            }
+            .legal-tabs {
+                flex-direction: column;
+            }
+            .legal-content h2 {
+                font-size: 1.25rem;
+            }
         }
     </style>
 </head>
