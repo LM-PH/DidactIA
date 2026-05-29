@@ -407,8 +407,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- FUNCIONES DE CARGA DE DATOS ---
 
-
-
     async function loadCreditsHistory() {
         if (!USER_DATA?.uid) return;
         creditsHistoryContainer.innerHTML = '<p class="loading-text">Cargando movimientos...</p>';
@@ -416,9 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const q = query(
                 collection(db, "transactions"),
-                where("uid", "==", USER_DATA.uid),
-                orderBy("fecha", "desc"),
-                limit(50)
+                where("uid", "==", USER_DATA.uid)
             );
             
             onSnapshot(q, (snapshot) => {
@@ -428,8 +424,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 creditsHistoryContainer.innerHTML = "";
+                
+                let transacciones = [];
                 snapshot.forEach(docSnap => {
-                    const tx = docSnap.data();
+                    transacciones.push(docSnap.data());
+                });
+
+                // Ordenar localmente por fecha descendente para evitar la necesidad de Composite Indexes en Firebase
+                transacciones.sort((a, b) => {
+                    const timeA = a.fecha ? a.fecha.toMillis() : 0;
+                    const timeB = b.fecha ? b.fecha.toMillis() : 0;
+                    return timeB - timeA;
+                });
+
+                // Mostrar máximo 50
+                transacciones.slice(0, 50).forEach(tx => {
                     const date = tx.fecha ? tx.fecha.toDate().toLocaleString() : 'Reciente';
                     const item = document.createElement('div');
                     item.className = 'transaction-item';
@@ -448,6 +457,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                     creditsHistoryContainer.appendChild(item);
                 });
+            }, (error) => {
+                console.error("Error en Snapshot de historial:", error);
+                creditsHistoryContainer.innerHTML = '<p class="loading-text" style="color:#ef4444;">No se pudo cargar el historial.</p>';
             });
         } catch (error) {
             console.error("Error al cargar historial:", error);
