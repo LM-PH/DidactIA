@@ -196,6 +196,7 @@
         const hash = await hashPassword(pwd);
         if (hash === ADMIN_HASH) {
             sessionStorage.setItem(SESSION_KEY, "true");
+            sessionStorage.setItem("admin_hash", hash);
             showPanel();
         } else {
             document.getElementById('login-error').style.display = 'block';
@@ -217,32 +218,49 @@
 
     async function loadUsers() {
         try {
-            const q = query(collection(db, "usuarios"), orderBy("fechaRegistro", "desc"));
-            const snap = await getDocs(q);
+            // Usar el hash guardado en sesión
+            const hash = sessionStorage.getItem("admin_hash");
+            if (!hash) {
+                document.getElementById('table-loading').textContent = 'Se requiere autenticación para cargar usuarios.';
+                return;
+            }
+
+            const res = await fetch('/api/list-users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminHash: hash })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Error al cargar usuarios');
+            }
+
+            const users = data.users;
 
             document.getElementById('table-loading').style.display = 'none';
-            document.getElementById('user-count').textContent = snap.size;
+            document.getElementById('user-count').textContent = users.length;
 
-            if (snap.empty) {
+            if (users.length === 0) {
                 document.getElementById('no-users').style.display = 'block';
                 return;
             }
 
             const tbody = document.getElementById('users-body');
             tbody.innerHTML = '';
-            snap.forEach(d => {
-                const u = d.data();
+            users.forEach(u => {
                 const fecha = u.fechaRegistro
                     ? new Date(u.fechaRegistro).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' })
                     : 'N/A';
                 const row = document.createElement('tr');
-                row.id = `row-${d.id}`;
+                row.id = `row-${u.id}`;
                 row.innerHTML = `
                     <td>${u.nombre || '—'}</td>
                     <td><span class="badge">${u.nickname || '—'}</span></td>
                     <td>${u.email}</td>
                     <td>${fecha}</td>
-                    <td><button class="delete-btn" onclick="removeUser('${d.id}','${u.email}')">Eliminar</button></td>
+                    <td><button class="delete-btn" onclick="removeUser('${u.id}','${u.email}')">Eliminar</button></td>
                 `;
                 tbody.appendChild(row);
             });
