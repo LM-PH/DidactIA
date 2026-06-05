@@ -1,7 +1,7 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { doc, getDoc, setDoc, deleteDoc, addDoc, collection, query, where, orderBy, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { CONOCIMIENTO_NEM, DESCRIPCIONES_EJES } from './pedagogia.js';
+import { CONOCIMIENTO_NEM, DESCRIPCIONES_EJES, METODOLOGIAS_SOCIOCRITICAS } from './pedagogia.js';
 
 // DidactIA v15.0 - Sistema Desbloqueado
 
@@ -207,7 +207,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 if (chatMessages.children.length === 0) {
-                    addMessage(`¡Hola! 👋 Soy DidactIA. Vamos a crear una planeación 100% oficial de forma ordenada.\n\n**1. ¿Cuál es el nombre de tu escuela?**`, 'bot');
+                    const nombreCompleto = data.nombre || data.nickname || user.displayName || user.email.split('@')[0];
+                    const primerNombre = nombreCompleto.split(' ')[0];
+                    addMessage(`¡Hola ${primerNombre}! 👋 Soy DidactIA. Vamos a crear una nueva planeación didáctica. Para comenzar de forma rápida y ahorrarte tiempo, por favor compárteme tus **Datos Generales** (puedes escribirlos separados por comas o saltos de línea):\n\n🏫 Escuela:\n👩‍🏫 Docente:\n📅 Ciclo y Periodo:\n📚 Asignatura:\n🎓 Grado y Grupo:`, 'bot');
                 }
             } else {
                 setDoc(userRef, {
@@ -298,7 +300,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 userData: USER_DATA,
                 pedagogicalData: {
                     programaText: PROGRAMA_TEXT,
-                    ejes: DESCRIPCIONES_EJES
+                    ejes: DESCRIPCIONES_EJES,
+                    metodologias: METODOLOGIAS_SOCIOCRITICAS
                 }
             })
         });

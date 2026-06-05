@@ -182,4 +182,47 @@ function obtenerContextoPorAsignatura(asignatura) {
     return null;
 }
 
-export { CONOCIMIENTO_NEM, DESCRIPCIONES_EJES, obtenerContextoPorAsignatura };
+const METODOLOGIAS_SOCIOCRITICAS = {
+    "LENGUAJES": {
+        "metodologia": "Aprendizaje basado en proyectos comunitarios",
+        "fases": [
+            "Fase 1. Planeación (Momento 1. Identificación, Momento 2. Recuperación, Momento 3. Planificación)",
+            "Fase 2. Acción (Momento 4. Acercamiento, Momento 5. Comprensión y producción, Momento 6. Reconocimiento, Momento 7. Concreción)",
+            "Fase 3. Intervención (Momento 8. Integración, Momento 9. Difusión, Momento 10. Consideraciones, Momento 11. Avances)"
+        ]
+    },
+    "SABERES Y PENSAMIENTO CIENTÍFICO": {
+        "metodologia": "Aprendizaje basado en indagación. Bajo enfoque STEAM",
+        "fases": [
+            "Fase 1 (Introducción, Conocimientos previos, Identificación del problema)",
+            "Fase 2 (Preguntas de indagación, Explicación inicial)",
+            "Fase 3 (Conclusiones relacionadas con la problemática general)",
+            "Fase 4 (Presentar resultados de indagación, Se elaboran propuestas de acción para resolver la problemática general)",
+            "Fase 5 (Se reflexiona sobre todo lo realizado)",
+            "Consideraciones adicionales (Para la elaboración de un objeto o instrumento tecnológico: Diseño del prototipo, Creación del prototipo, Puesta a prueba del prototipo y su evaluación, Mejora del prototipo, Otros aspectos)"
+        ]
+    },
+    "ÉTICA, NATURALEZA Y SOCIEDADES": {
+        "metodologia": "Aprendizaje basado en problemas",
+        "fases": [
+            "1. Presentamos (Plantear la reflexión inicial)",
+            "2. Recolectemos (Exploran y recuperan de manera general los saberes sociales y escolares previos respecto a la temática detectada en el momento 1)",
+            "3. Formulemos el problema (Determina con claridad el problema sobre el cual se trabajará, así como las inquietudes y curiosidad de los alumnos)",
+            "4. Organicemos la experiencia (Plantea una ruta de trabajo para el proceso de indagación para argumentar una posible solución al problema planteado)",
+            "5. Vivamos la experiencia (Guiar a los alumnos a una indagación de corte documental y/o vivencial con la intención de aportar elementos que lo lleven a comprender el problema y, en su caso, intervenir para transformarlo)",
+            "6. Resultados y análisis (Se retoman el problema inicial, los hallazgos, el proceso de construcción de acuerdos, los aprendizajes obtenidos, se plantean los medios para divulgar los resultados)"
+        ]
+    },
+    "DE LO HUMANO Y LO COMUNITARIO": {
+        "metodologia": "Aprendizaje servicio",
+        "fases": [
+            "Etapa 1. Punto de partida (Iniciar con actividades de sensibilización e información)",
+            "Etapa 2. Lo que sé y lo que quiero saber (Conocer la realidad sobre la que se trabajará al recabar información y distinguir las necesidades reales)",
+            "Etapa 3. Organicemos las actividades (Desarrollo de la planeación pedagógica con la ejecución de proyectos sociales. Describir actividades, recursos, tiempos y responsables)",
+            "Etapa 4. Creatividad en marcha (Puesta en práctica de lo planeado. Seguimiento de los contenidos curriculares y del servicio)",
+            "Etapa 5. Compartimos y evaluamos lo aprendido (Realizar actividades para la evaluación final de los resultados, así como el cumplimiento de los objetivos y logros del proyecto)"
+        ]
+    }
+};
+
+export { CONOCIMIENTO_NEM, DESCRIPCIONES_EJES, obtenerContextoPorAsignatura, METODOLOGIAS_SOCIOCRITICAS };
