@@ -1,12 +1,19 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Permitir todo en la colección usuarios para que el panel funcione sin login de Firebase
-    match /usuarios/{document=**} {
-      allow read, write, delete: if true;
+    // Colección usuarios: Solo el propietario puede leer y modificar su documento
+    match /usuarios/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Reglas normales para lo demás
+    // Colección transactions: El usuario solo puede leer sus propias transacciones
+    // La creación de transacciones se realiza exclusivamente desde el backend seguro
+    match /transactions/{transactionId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow write: if false;
+    }
+    
+    // Otras colecciones de usuarios (si aplica)
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
