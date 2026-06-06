@@ -249,7 +249,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!text) return;
 
         // Validar créditos localmente antes de enviar
-        if ((USER_DATA?.creditos ?? 0) <= 0) {
+        const isSuperAdmin = USER_DATA?.email === 'zlagustin10@gmail.com';
+        if (!isSuperAdmin && (USER_DATA?.creditos ?? 0) <= 0) {
             addMessage("⚠️ No tienes créditos suficientes. Por favor adquiere más para continuar.", 'bot');
             creditsModal.classList.add('active');
             return;
@@ -288,7 +289,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     sendBtn.onclick = handleSend;
-    chatInput.onkeypress = (e) => { if (e.key === 'Enter') handleSend(); };
+    // Eliminamos el envío con "Enter" para permitir saltos de línea.
+    // El usuario deberá presionar el botón de enviar para mandar el mensaje.
 
     async function callGeminiAPI(userMessage) {
         const response = await fetch('/api/chat', {

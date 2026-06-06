@@ -50,7 +50,8 @@ export default async function handler(req, res) {
             const today = new Date().toISOString().split('T')[0];
             
             // Validar Créditos
-            if ((data.creditos || 0) <= 0) {
+            const isSuperAdmin = data.email === 'zlagustin10@gmail.com';
+            if (!isSuperAdmin && (data.creditos || 0) <= 0) {
                 return res.status(403).json({ 
                     error: 'SIN_CREDITOS', 
                     message: 'Te has quedado sin créditos. Por favor, adquiere más para continuar.' 
@@ -76,13 +77,17 @@ PROTOCOLO OPTIMIZADO DE 5 PASOS
 Pide la información de forma agrupada para evitar saturar al usuario:
 1. Datos Generales (Agrupado): El usuario debe proporcionarte de un solo golpe: Escuela, Docente, Ciclo, Periodo, Asignatura y Grado/Grupo. Si falta algo, pídelo amablemente.
 2. Contenido: Pregunta qué Contenido se va a desarrollar.
-3. Selección de PDAs: Al recibir el Contenido, busca en el PROGRAMA SINTÉTICO los PDAs correspondientes a ese Contenido y Asignatura. Muéstralos en una lista numerada y pide al docente que elija el o los PDAs tecleando su número.
+3. Selección de PDAs: Al recibir el Contenido, busca en el PROGRAMA SINTÉTICO los PDAs correspondientes a ese Contenido, Asignatura y **Grado específico**. Muéstrale al docente ÚNICAMENTE los PDAs de su grado en una lista numerada (Ej. 1. [Texto]). Pídele que elija tecleando el número. **ATENCIÓN AL LEER EL NÚMERO:** Sé extremadamente preciso. Si el docente escribe "1", "uno", "el 1", se refiere exclusivamente al número 1, NO asumas que es un 11 u otro número. Interpreta su intención exacta.
 4. Sesiones y Situación Problema (Agrupado): Pregunta en un solo mensaje: a) En cuántas sesiones se desarrollará el/los PDA(s), y b) Cuál es la Situación Problema (Problema del Contexto).
 5. Sugerencia y Aprobación: Al recibir la Situación Problema y las Sesiones, sugiere al docente una Metodología Didáctica (y sus Fases), un Nombre del Proyecto y un Producto Final. Pide su aprobación o posibles ajustes.
 
 Una vez aprobado el paso 5, genera las tablas. 
-**REGLA DE DOSIFICACIÓN DE PROYECTOS:** Un Proyecto corresponde a un Contenido completo. Si el docente elige desarrollar solo una parte de los PDAs del Contenido seleccionado (ej. solo el primer PDA), asume que es el inicio del proyecto y diseña la Secuencia Didáctica abarcando solo las fases iniciales de la Metodología sugerida, dejando claro que el proyecto continuará en futuras planeaciones. Si elige PDAs intermedios o finales, asume la continuidad o cierre del proyecto respectivamente. Si elige todos los PDAs, dosifica todas las fases del proyecto desde el inicio hasta el Producto Final en las sesiones indicadas.
-
+**REGLA ESTRICTA DE DOSIFICACIÓN DE PROYECTOS (¡MUY IMPORTANTE!):** 
+- Un "Proyecto" ampara todo el "Contenido" (es decir, TODOS sus PDAs juntos).
+- Si el docente elige **SOLO 1 PDA** (o una parte de ellos), tienes **ESTRICTAMENTE PROHIBIDO** desarrollar todas las fases de la metodología. 
+- Debes "dosificar" el proyecto: Si eligió el primer PDA, diseña la Secuencia Didáctica abarcando **ÚNICAMENTE** las fases iniciales (ej. Fase 1 y/o 2) ajustadas a las sesiones que pidió. NO incluyas las fases de desarrollo avanzado, cierre, ni la evaluación del producto final. En su lugar, agrega una nota indicando: *"Las siguientes fases del proyecto se desarrollarán en futuras planeaciones con los PDAs restantes"*.
+- Si elige un PDA intermedio, desarrolla solo las fases intermedias. Si elige el último PDA, desarrolla solo las fases de cierre y presentación del producto. 
+- Solo si el docente elige TODOS los PDAs al mismo tiempo, puedes desarrollar la metodología completa de principio a fin.
 ========================================
 FORMATO DE SALIDA (SÓLO 7 TABLAS HTML)
 ========================================
@@ -93,7 +98,7 @@ Genera un <div id="planeacion-oficial"> con estas 7 tablas:
 4. EVALUACIÓN
 5. RECURSOS
 6. ADECUACIONES
-7. VINCULACIÓN (Especifica con qué contenidos de otras disciplinas se complementa de forma transversal el proyecto)
+7. VINCULACIÓN (Especifica contenidos transversales de otras disciplinas. **REGLA NEM:** Asocia correctamente: Lenguajes [Español, Inglés, Artes], Saberes y P.C. [Matemáticas, Biología, Física, Química], Ética, Naturaleza y Soc. [Geografía, Historia, FCyE], De lo Humano y lo Comunitario [Tecnología, Ed. Física, Tutoría]).
 
 ========================================
 BASE DE DATOS (PROGRAMA SINTÉTICO Y METODOLOGÍAS)
@@ -155,7 +160,8 @@ ${JSON.stringify(pedagogicalData?.metodologias || {})}`;
                 const snap = await t.get(userDocRef);
                 const userData = snap.exists ? snap.data() : { creditos: 0, totalPlaneaciones: 0 };
                 
-                const newCredits = (userData.creditos || 0) - 1;
+                const isSuperAdmin = userData.email === 'zlagustin10@gmail.com';
+                const newCredits = isSuperAdmin ? userData.creditos : (userData.creditos || 0) - 1;
                 const totalGenerated = (userData.totalPlaneaciones || 0) + 1;
 
                 // Extraer metadatos básicos de la planeación (búsqueda simple)
