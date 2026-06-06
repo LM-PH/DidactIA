@@ -25,10 +25,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow-y: auto;
-    overflow-x: hidden;
     position: relative;
-    padding: 40px 0; /* Add padding so it doesn't touch edges when scrolled */
+    padding: 40px 16px; /* Ajuste para dar espacio en bordes laterales y verticales */
 }
 
 /* Forzar barra visible en Mac/PC */
