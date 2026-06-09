@@ -25,40 +25,49 @@ try {
     firebaseInitError = error.message;
 }
 
-// Hash SHA-256 de la contraseña admin (misma que en admin.html)
-const ADMIN_HASH = "3a3cd7dfd12e7429e15f7714d55e1bd587e63d5c46e770f960f3d04aff7a296a";
-
-async function sha256(text) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(text);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(hashBuffer))
-        .map(b => b.toString(16).padStart(2, '0')).join('');
-}
+const ADMIN_EMAIL = "zlagustin10@gmail.com";
 
 export default async function handler(req, res) {
     if (req.method !== 'DELETE') {
         return res.status(405).json({ error: 'Método no permitido' });
     }
 
-    const { uid, adminPassword } = req.body;
-
-    if (!uid || !adminPassword) {
-        return res.status(400).json({ error: 'Faltan parámetros: uid y adminPassword' });
+    if (firebaseInitError) {
+        return res.status(500).json({ error: 'Error de inicialización de Firebase: ' + firebaseInitError });
     }
 
-    // Verificar contraseña admin
-    const hash = await sha256(adminPassword);
-    if (hash !== ADMIN_HASH) {
-        return res.status(403).json({ error: 'No autorizado' });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No autorizado: Falta token de autenticación.' });
+    }
+
+    const token = authHeader.split('Bearer ')[1];
+    const { uid } = req.body;
+
+    if (!uid) {
+        return res.status(400).json({ error: 'Falta parámetro: uid' });
     }
 
     try {
+        // Verificar token de administrador
+        const decodedToken = await adminAuth.verifyIdToken(token);
+        if (decodedToken.email !== ADMIN_EMAIL) {
+            return res.status(403).json({ error: 'Acceso denegado: Se requiere cuenta de administrador.' });
+        }
+
+        if (!adminDb || !adminAuth) {
+            return res.status(500).json({ error: 'Error interno: Firebase Admin no inicializado completamente.' });
+        }
+
         // 1. Borrar de Firebase Authentication
         await adminAuth.deleteUser(uid);
         console.log(`Usuario ${uid} eliminado de Firebase Auth`);
     } catch (authErr) {
-        // Si no existe en Auth, no es error crítico
+        // Si el token es inválido o expira
+        if (authErr.code === 'auth/argument-error' || authErr.message.includes('token')) {
+            return res.status(401).json({ error: 'Token de autenticación inválido.' });
+        }
+        // Si no existe en Auth, no es error crítico, continuamos a Firestore
         if (authErr.code !== 'auth/user-not-found') {
             console.error('Error Auth:', authErr.message);
         }

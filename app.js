@@ -23,42 +23,7 @@ window.switchView = function(viewId) {
     const activePanel = document.getElementById(`view-${viewId}`);
     if (activePanel) activePanel.classList.add('active');
 };
-
-window.comprarCreditos = async function(btn) {
-    console.log("--- CLIC EN ADQUIRIR DETECTADO ---");
-    const pkgId = btn.getAttribute('data-pkg');
-    const credits = btn.getAttribute('data-credits');
-    const price = btn.getAttribute('data-price');
-    
-    if (!USER_DATA) {
-        alert("⚠️ Por favor, inicia sesión para comprar créditos.");
-        return;
-    }
-
-    const originalText = btn.innerHTML;
-    btn.innerHTML = "Conectando...";
-    btn.disabled = true;
-
-    try {
-        const response = await fetch('/api/create-preference', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pkgId, credits, price, uid: USER_DATA.uid, email: USER_DATA.email })
-        });
-        const result = await response.json();
-        if (result.init_point) {
-            window.location.assign(result.init_point);
-        } else {
-            alert("Error: " + (result.error || "No se generó el link"));
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
-    } catch (e) {
-        alert("Error de conexión con el servidor");
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }
-};
+// window.comprarCreditos original removido para evitar duplicados. Ver definición abajo.
 
 let USER_DATA = null;
 let PROGRAMA_TEXT = "";
@@ -293,13 +258,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // El usuario deberá presionar el botón de enviar para mandar el mensaje.
 
     async function callGeminiAPI(userMessage) {
+        const idToken = await auth.currentUser.getIdToken();
         const response = await fetch('/api/chat', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+            },
             body: JSON.stringify({
                 history: conversationHistory,
                 userMessage: userMessage,
-                userData: USER_DATA,
                 pedagogicalData: {
                     programaText: PROGRAMA_TEXT,
                     ejes: DESCRIPCIONES_EJES,
@@ -527,8 +495,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     pkgId: pkgId,
-                    credits: credits,
-                    price: price,
                     uid: USER_DATA.uid,
                     email: USER_DATA.email
                 })

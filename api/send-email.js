@@ -1,7 +1,22 @@
 import { Resend } from 'resend';
+import admin from 'firebase-admin';
 
-// Vercel inyectará esto si está en las variables de entorno
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Inicializar Firebase Admin
+try {
+    if (!admin.apps.length) {
+        const serviceAccountStr = process.env.FIREBASE_SERVICE_ACCOUNT;
+        if (serviceAccountStr) {
+            const serviceAccount = JSON.parse(serviceAccountStr);
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount)
+            });
+        }
+    }
+} catch (error) {
+    console.error("Error al inicializar Firebase Admin en send-email:", error);
+}
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -9,16 +24,40 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { to, subject, html } = req.body;
-
-        if (!to || !subject || !html) {
-            return res.status(400).json({ error: 'Missing required fields' });
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'No autorizado' });
         }
+
+        const token = authHeader.split('Bearer ')[1];
+        let decodedToken;
+        try {
+            decodedToken = await admin.auth().verifyIdToken(token);
+        } catch (e) {
+            return res.status(401).json({ error: 'Token de autenticación inválido.' });
+        }
+
+        const email = decodedToken.email;
+        if (!email) {
+            return res.status(400).json({ error: 'El token no contiene un correo electrónico.' });
+        }
+
+        const name = decodedToken.name || 'Docente';
+        const firstName = name.split(' ')[0];
+
+        const subject = '¡Bienvenido a DidactIA! 🍎';
+        const html = `<div style="font-family:sans-serif; padding:20px; text-align:center;">
+            <h2>¡Hola, ${firstName}!</h2>
+            <p>Te damos la bienvenida a <strong>DidactIA</strong>, tu asistente de planeaciones.</p>
+            <p>Hemos añadido <strong>1 crédito de regalo</strong> a tu cuenta para que pruebes nuestra tecnología.</p>
+            <p>¡Esperamos que te sea de muchísima utilidad!</p>
+            <a href="https://didactia.app" style="display:inline-block; padding:10px 20px; background:#4F46E5; color:white; text-decoration:none; border-radius:5px; margin-top:20px;">Comenzar a planear</a>
+        </div>`;
 
         // Send email using Resend
         const data = await resend.emails.send({
-            from: 'DidactIA <hola@didactia.app>', // El usuario deberá configurar su dominio en Resend después, o usar la dirección por defecto de Resend para pruebas
-            to: [to],
+            from: 'DidactIA <hola@didactia.app>',
+            to: [email],
             subject: subject,
             html: html,
         });

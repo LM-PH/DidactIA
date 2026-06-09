@@ -3,11 +3,25 @@ import { MercadoPagoConfig, Preference } from 'mercadopago';
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    const { pkgId, credits, price, uid, email } = req.body;
+    const { pkgId, uid, email } = req.body;
 
     if (!uid || !pkgId) {
         return res.status(400).json({ error: 'Faltan datos requeridos (UID o Paquete)' });
     }
+
+    const PACKAGES = {
+        'test-1': { credits: 1, price: 20 },
+        '20': { credits: 20, price: 300 },
+        '50': { credits: 50, price: 550 }
+    };
+
+    const pkg = PACKAGES[pkgId];
+    if (!pkg) {
+        return res.status(400).json({ error: 'El paquete seleccionado no es válido' });
+    }
+
+    const credits = pkg.credits;
+    const price = pkg.price;
 
     try {
         // Configurar Mercado Pago

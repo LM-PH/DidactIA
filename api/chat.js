@@ -27,15 +27,26 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: `Error de configuración del servidor (Firebase): ${firebaseInitError}` });
     }
 
-    const { history, userMessage, pedagogicalData, userData } = req.body;
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Usuario no identificado o no autorizado.' });
+    }
+
+    const token = authHeader.split('Bearer ')[1];
+    let uid;
+    try {
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        uid = decodedToken.uid;
+    } catch (e) {
+        return res.status(401).json({ error: 'Token de autenticación inválido.' });
+    }
+
+    const { history, userMessage, pedagogicalData } = req.body;
     const API_KEY = process.env.GEMINI_API_KEY;
 
     if (!API_KEY) {
         return res.status(500).json({ error: 'La clave de API (GEMINI_API_KEY) no está configurada.' });
     }
-
-    const uid = userData?.uid;
-    if (!uid) return res.status(401).json({ error: 'Usuario no identificado.' });
 
     // --- VALIDACIÓN DE CRÉDITOS Y LÍMITES ---
     let userDocRef = null;
