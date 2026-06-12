@@ -101,6 +101,21 @@
             color: #818CF8; padding: 3px 10px; border-radius: 20px;
             font-size: 12px;
         }
+        .badge-credits {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-credits.positive {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10B981;
+        }
+        .badge-credits.zero {
+            background: rgba(239, 68, 68, 0.15);
+            color: #FCA5A5;
+        }
         .delete-btn {
             background: rgba(239,68,68,0.1); color: #EF4444;
             border: 1px solid rgba(239,68,68,0.3);
@@ -169,6 +184,7 @@
                         <th>Nombre</th>
                         <th>Nickname</th>
                         <th>Correo</th>
+                        <th>Créditos</th>
                         <th>Fecha de Registro</th>
                         <th>Acción</th>
                     </tr>
@@ -292,10 +308,13 @@
                     : 'N/A';
                 const row = document.createElement('tr');
                 row.id = `row-${u.id}`;
+                const creditos = u.creditos !== undefined ? u.creditos : 0;
+                const creditosClass = creditos > 0 ? 'positive' : 'zero';
                 row.innerHTML = `
                     <td>${u.nombre || '—'}</td>
                     <td><span class="badge">${u.nickname || '—'}</span></td>
                     <td>${u.email}</td>
+                    <td><span class="badge-credits ${creditosClass}">${creditos}</span></td>
                     <td>${fecha}</td>
                     <td><button class="delete-btn" onclick="removeUser('${u.id}','${u.email}')">Eliminar</button></td>
                 `;
