@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'Authorization': `Bearer ${idToken}`
             },
             body: JSON.stringify({
-                history: conversationHistory,
+                history: conversationHistory.slice(0, -1),
                 userMessage: userMessage,
                 pedagogicalData: {
                     programaText: PROGRAMA_TEXT,
