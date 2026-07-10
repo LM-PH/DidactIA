@@ -64,7 +64,7 @@ export default async function handler(req, res) {
 
         const result = await preference.create({ body });
         
-        res.status(200).json({ id: result.id, init_point: result.init_point });
+        res.status(200).json({ id: result.id, init_point: result.init_point || result.sandbox_init_point });
     } catch (error) {
         console.error('Error creating preference:', error);
         res.status(500).json({ error: 'Error al crear la preferencia de pago' });
