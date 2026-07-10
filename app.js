@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadBtn = document.getElementById('download-btn');
     const finalizeBtn = document.getElementById('finalizar-btn');
     const newChatBtn = document.getElementById('new-chat-btn');
+    const creditsModal = document.getElementById('credits-modal');
     
     // --- ELEMENTOS UI PANEL ---
     const navButtons = document.querySelectorAll('.nav-btn');
