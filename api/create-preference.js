@@ -31,6 +31,10 @@ export default async function handler(req, res) {
 
         const preference = new Preference(client);
 
+        const protocol = req.headers['x-forwarded-proto'] || 'https';
+        const host = req.headers.host || 'didactia.vercel.app';
+        const baseUrl = req.headers.origin || `${protocol}://${host}`;
+
         const body = {
             items: [
                 {
@@ -45,9 +49,9 @@ export default async function handler(req, res) {
                 email: email
             },
             back_urls: {
-                success: `${req.headers.origin}/?status=success`,
-                failure: `${req.headers.origin}/?status=failure`,
-                pending: `${req.headers.origin}/?status=pending`,
+                success: `${baseUrl}/?status=success`,
+                failure: `${baseUrl}/?status=failure`,
+                pending: `${baseUrl}/?status=pending`,
             },
             auto_return: 'approved',
             external_reference: uid, // Importante para el Webhook
@@ -55,7 +59,7 @@ export default async function handler(req, res) {
                 uid: uid,
                 credits: credits
             },
-            notification_url: `https://${req.headers.host}/api/webhook-mercadopago`
+            notification_url: `https://${host}/api/webhook-mercadopago`
         };
 
         const result = await preference.create({ body });
