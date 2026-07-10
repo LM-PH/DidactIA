@@ -404,16 +404,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     transacciones.push(docSnap.data());
                 });
 
-                // Ordenar localmente por fecha descendente para evitar la necesidad de Composite Indexes en Firebase
+                // Ordenar localmente por fecha descendente
                 transacciones.sort((a, b) => {
-                    const timeA = a.fecha ? a.fecha.toMillis() : 0;
-                    const timeB = b.fecha ? b.fecha.toMillis() : 0;
-                    return timeB - timeA;
+                    const getTime = (f) => {
+                        if (!f) return 0;
+                        if (typeof f.toMillis === 'function') return f.toMillis();
+                        if (f.seconds) return f.seconds * 1000;
+                        if (typeof f === 'string' || typeof f === 'number') return new Date(f).getTime();
+                        return 0;
+                    };
+                    return getTime(b.fecha) - getTime(a.fecha);
                 });
 
                 // Mostrar máximo 50
                 transacciones.slice(0, 50).forEach(tx => {
-                    const date = tx.fecha ? tx.fecha.toDate().toLocaleString() : 'Reciente';
+                    let date = 'Reciente';
+                    try {
+                        if (tx.fecha) {
+                            if (typeof tx.fecha.toDate === 'function') date = tx.fecha.toDate().toLocaleString();
+                            else if (tx.fecha.seconds) date = new Date(tx.fecha.seconds * 1000).toLocaleString();
+                            else if (typeof tx.fecha === 'string' || typeof tx.fecha === 'number') date = new Date(tx.fecha).toLocaleString();
+                        }
+                    } catch (e) {
+                        console.error("Error fecha:", e);
+                    }
+                    
                     const item = document.createElement('div');
                     item.className = 'transaction-item';
                     item.innerHTML = `
