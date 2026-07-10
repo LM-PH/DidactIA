@@ -377,7 +377,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     finalizeBtn.onclick = () => { if(currentPlanningHtml) downloadBtn.click(); };
     newChatBtn.onclick = () => { conversationHistory = []; location.reload(); };
-});
 
     // --- FUNCIONES DE CARGA DE DATOS ---
 
@@ -592,3 +591,4 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.disabled = false;
         }
     };
+});
