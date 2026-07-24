@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatMessages = document.getElementById('chat-messages');
     const contentViewer = document.getElementById('content-viewer');
     const downloadBtn = document.getElementById('download-btn');
+    const downloadWordBtn = document.getElementById('download-word-btn');
     const finalizeBtn = document.getElementById('finalizar-btn');
     const newChatBtn = document.getElementById('new-chat-btn');
     const creditsModal = document.getElementById('credits-modal');
@@ -393,6 +394,36 @@ document.addEventListener('DOMContentLoaded', () => {
         // Nueva forma de descargar en PDF profesional
         html2pdf().set(opt).from(element).save();
     });
+
+    if (downloadWordBtn) {
+        downloadWordBtn.addEventListener('click', () => {
+            if (!currentPlanningHtml) return alert('No hay planeación cargada.');
+            
+            const preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Planeacion DidactIA</title><style>body { font-family: 'Arial', sans-serif; color: #333; } table { width: 100%; border-collapse: collapse; margin-bottom: 20px; } th, td { border: 1px solid #000; padding: 8px; text-align: left; } th { background-color: #f2f2f2; } h1, h2 { color: #1e1b4b; }</style></head><body>";
+            const postHtml = "</body></html>";
+            
+            // Remove the metadata div before exporting
+            let exportHtml = currentPlanningHtml.replace(/<div id=["']metadata-planeacion["'][\s\S]*?<\/div>/i, '');
+            
+            const html = preHtml + exportHtml + postHtml;
+            const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+            const url = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(html);
+            const filename = 'Planeacion_DidactIA.doc';
+            
+            const downloadLink = document.createElement("a");
+            document.body.appendChild(downloadLink);
+            
+            if (navigator.msSaveOrOpenBlob) {
+                navigator.msSaveOrOpenBlob(blob, filename);
+            } else {
+                downloadLink.href = url;
+                downloadLink.download = filename;
+                downloadLink.click();
+            }
+            
+            document.body.removeChild(downloadLink);
+        });
+    }
 
     finalizeBtn.onclick = () => { if(currentPlanningHtml) downloadBtn.click(); };
     newChatBtn.onclick = () => { conversationHistory = []; location.reload(); };
