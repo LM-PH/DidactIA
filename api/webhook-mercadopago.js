@@ -59,9 +59,10 @@ export default async function handler(req, res) {
                         
                         const currentCredits = userSnap.data().creditos || 0;
                         
-                        // Actualizar créditos
+                        // Actualizar créditos y plan
                         t.update(userRef, {
-                            creditos: currentCredits + creditsToAdd
+                            creditos: currentCredits + creditsToAdd,
+                            plan: 'premium'
                         });
 
                         // Registrar transacción

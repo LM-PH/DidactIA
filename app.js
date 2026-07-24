@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     profileEmail.classList.remove('skeleton', 'skeleton-text');
                 }
                 if (profilePlanBadge) {
-                    profilePlanBadge.textContent = data.plan === 'premium' ? 'Plan Premium' : 'Plan Gratis';
+                    profilePlanBadge.textContent = (data.plan === 'premium' || data.creditos > 1) ? 'Plan Premium' : 'Plan Gratis';
                     profilePlanBadge.classList.remove('skeleton');
                 }
                 if (statCredits) {
