@@ -102,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Acciones específicas
         if (viewId === 'credits') loadCreditsHistory();
+        if (viewId === 'dashboard') loadProjectsHistory();
     }
 
     onAuthStateChanged(auth, async (user) => {
@@ -312,6 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         pdas: metaMatch[2],
                         nombre_proyecto: metaMatch[3],
                         resumen: metaMatch[4],
+                        html: finalHtml,
                         fecha: new Date().toISOString()
                     });
                     console.log("Proyecto guardado en el historial");
@@ -429,6 +431,73 @@ document.addEventListener('DOMContentLoaded', () => {
     newChatBtn.onclick = () => { conversationHistory = []; location.reload(); };
 
     // --- FUNCIONES DE CARGA DE DATOS ---
+
+    async function loadProjectsHistory() {
+        if (!USER_DATA?.uid) return;
+        const container = document.getElementById('projects-history-container');
+        if (!container) return;
+
+        container.innerHTML = '<p class="loading-text">Cargando planeaciones...</p>';
+        
+        try {
+            const q = query(
+                collection(db, "proyectos"),
+                where("uid", "==", USER_DATA.uid),
+                orderBy("fecha", "desc") // Nota: Esto requerirá un índice compuesto en Firestore
+            );
+            
+            // Para evitar errores si no hay índice todavía, hacemos el query básico y ordenamos en local si falla.
+            const basicQ = query(collection(db, "proyectos"), where("uid", "==", USER_DATA.uid));
+            
+            onSnapshot(basicQ, (snapshot) => {
+                if (snapshot.empty) {
+                    container.innerHTML = '<p class="loading-text" style="grid-column: 1/-1; text-align:center;">Aún no tienes planeaciones guardadas.</p>';
+                    return;
+                }
+                
+                let proyectos = [];
+                snapshot.forEach(doc => proyectos.push({ id: doc.id, ...doc.data() }));
+                
+                // Ordenar localmente por fecha descendente
+                proyectos.sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
+                
+                container.innerHTML = "";
+                proyectos.forEach(p => {
+                    const card = document.createElement('div');
+                    card.style.cssText = "background: white; border-radius: 8px; padding: 15px; border: 1px solid #e2e8f0; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;";
+                    card.onmouseover = () => { card.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)"; card.style.transform = "translateY(-2px)"; };
+                    card.onmouseout = () => { card.style.boxShadow = "none"; card.style.transform = "none"; };
+                    
+                    const dateStr = p.fecha ? new Date(p.fecha).toLocaleDateString() : 'Sin fecha';
+                    
+                    card.innerHTML = `
+                        <div style="font-size: 12px; color: #64748b; margin-bottom: 5px;">${dateStr}</div>
+                        <h4 style="margin: 0 0 10px 0; color: #1e1b4b; font-size: 15px;">${p.nombre_proyecto || 'Proyecto'}</h4>
+                        <p style="margin: 0; font-size: 13px; color: #475569; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                            <strong>Contenido:</strong> ${p.contenido || 'N/A'}<br>
+                            <strong>PDA:</strong> ${p.pdas || 'N/A'}
+                        </p>
+                    `;
+                    
+                    card.onclick = () => {
+                        if (p.html) {
+                            updateViewer(p.html);
+                            switchView('editor');
+                        } else {
+                            alert("Esta planeación es antigua y no tiene guardado su formato completo.");
+                        }
+                    };
+                    
+                    container.appendChild(card);
+                });
+            }, (error) => {
+                console.error("Error cargando historial de proyectos:", error);
+                container.innerHTML = '<p class="error-text">Error al cargar las planeaciones.</p>';
+            });
+        } catch (error) {
+            console.error("Error al iniciar carga de proyectos:", error);
+        }
+    }
 
     async function loadCreditsHistory() {
         if (!USER_DATA?.uid) return;
