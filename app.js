@@ -299,6 +299,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (match && match[0]) {
             finalHtml = match[0];
             cleanText = aiOutput.replace(planeacionRegex, '\n*(Planeación disponible en el visor derecho)*\n').trim();
+            
+            // Extraer y guardar metadatos si existen
+            const metadataRegex = /<div id=["']metadata-planeacion["']\s+data-contenido=["'](.*?)["']\s+data-pdas=["'](.*?)["']\s+data-proyecto=["'](.*?)["']\s+data-resumen=["'](.*?)["'].*?><\/div>/i;
+            const metaMatch = finalHtml.match(metadataRegex);
+            if (metaMatch && USER_DATA?.uid) {
+                try {
+                    await addDoc(collection(db, "proyectos"), {
+                        uid: USER_DATA.uid,
+                        contenido: metaMatch[1],
+                        pdas: metaMatch[2],
+                        nombre_proyecto: metaMatch[3],
+                        resumen: metaMatch[4],
+                        fecha: new Date().toISOString()
+                    });
+                    console.log("Proyecto guardado en el historial");
+                } catch (e) {
+                    console.error("Error al guardar proyecto", e);
+                }
+            }
         } else {
             const tableRegex = /<table[\s\S]*?<\/table>/gi;
             const tables = aiOutput.match(tableRegex);

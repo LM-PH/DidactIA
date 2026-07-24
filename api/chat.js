@@ -71,6 +71,26 @@ export default async function handler(req, res) {
         }
     }
 
+    // Obtener proyectos previos para la lógica de continuidad
+    let proyectosPreviosText = "Ninguno.";
+    if (db && uid) {
+        try {
+            const proyectosSnapshot = await db.collection('proyectos')
+                .where('uid', '==', uid)
+                .get();
+            if (!proyectosSnapshot.empty) {
+                let proyectos = [];
+                proyectosSnapshot.forEach(doc => proyectos.push(doc.data()));
+                proyectos.sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
+                proyectos = proyectos.slice(0, 5);
+                const proyectosStr = proyectos.map(p => `- Proyecto: "${p.nombre_proyecto}" (Contenido: "${p.contenido}", PDAs: ${p.pdas}). Resumen: ${p.resumen}`);
+                proyectosPreviosText = proyectosStr.join("\n");
+            }
+        } catch (e) {
+            console.error("Error al obtener proyectos previos:", e);
+        }
+    }
+
     const SYSTEM_PROMPT = `Actúa como DidactIA, asistente experto en NEM (México).
 
 ========================================
@@ -88,8 +108,8 @@ PROTOCOLO OPTIMIZADO DE 5 PASOS
 Pide la información de forma agrupada para evitar saturar al usuario:
 1. Datos Generales (Agrupado): El usuario debe proporcionarte de un solo golpe: Escuela, Docente, Ciclo, Periodo, Asignatura y Grado/Grupo. Si falta algo, pídelo amablemente.
 2. Contenido: Pregunta qué Contenido se va a desarrollar.
-3. Selección de PDAs: Al recibir el Contenido, busca en el PROGRAMA SINTÉTICO los PDAs correspondientes a ese Contenido, Asignatura y **Grado específico**. Muéstrale al docente ÚNICAMENTE los PDAs de su grado en una lista numerada (Ej. 1. [Texto]). Pídele que elija tecleando el número. **ATENCIÓN AL LEER EL NÚMERO:** Sé extremadamente preciso. Si el docente escribe "1", "uno", "el 1", se refiere exclusivamente al número 1, NO asumas que es un 11 u otro número. Interpreta su intención exacta.
-4. Sesiones y Situación Problema (Agrupado): Pregunta en un solo mensaje: a) En cuántas sesiones se desarrollará el/los PDA(s), y b) Cuál es la Situación Problema (Problema del Contexto).
+3. Selección de PDAs y Continuidad: Al recibir el Contenido, busca los PDAs de su grado y pídele que elija (Ej. 1. [Texto]). **IMPORTANTE:** Si el Contenido coincide o se relaciona estrechamente con un contenido listado en la sección de PROYECTOS PREVIOS DEL USUARIO, añádele a este paso la siguiente pregunta: *"He notado que ya tienes un proyecto previo llamado **'[Nombre del Proyecto]'** para este contenido. ¿Deseas que esta planeación sea una continuación directa de ese proyecto (siguientes fases) o prefieres uno nuevo?"*
+4. Sesiones y Situación Problema: Si aceptó continuar el proyecto, asume la misma Situación Problema del proyecto previo (menciónala), y solo pregúntale por las sesiones a trabajar. Si es un proyecto nuevo, pregúntale por Sesiones y Situación Problema de forma agrupada.
 5. Sugerencia y Aprobación: Al recibir la Situación Problema y las Sesiones, sugiere al docente una Metodología Didáctica (y sus Fases), un Nombre del Proyecto y un Producto Final. Pide su aprobación o posibles ajustes.
 
 Una vez aprobado el paso 5, genera las tablas. 
@@ -111,6 +131,13 @@ Genera un <div id="planeacion-oficial"> con estas 7 tablas:
 5. RECURSOS
 6. ADECUACIONES
 7. VINCULACIÓN (Especifica contenidos transversales de otras disciplinas. **REGLA NEM:** Asocia correctamente: Lenguajes [Español, Inglés, Artes], Saberes y P.C. [Matemáticas, Biología, Física, Química], Ética, Naturaleza y Soc. [Geografía, Historia, FCyE], De lo Humano y lo Comunitario [Tecnología, Ed. Física, Tutoría]).
+Al final, FUERA de las tablas pero DENTRO de <div id="planeacion-oficial">, debes incluir OBLIGATORIAMENTE este div oculto con los metadatos del proyecto que acabas de diseñar:
+<div id="metadata-planeacion" style="display:none;" data-contenido="[Nombre del Contenido]" data-pdas="[Números de PDA]" data-proyecto="[Nombre del Proyecto]" data-resumen="[Breve resumen de 2 líneas de lo que se hizo]"></div>
+
+========================================
+PROYECTOS PREVIOS DEL USUARIO
+========================================
+${proyectosPreviosText}
 
 ========================================
 BASE DE DATOS (PROGRAMA SINTÉTICO Y METODOLOGÍAS)
