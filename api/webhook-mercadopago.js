@@ -45,6 +45,7 @@ export default async function handler(req, res) {
                 const userRef = db.collection('usuarios').doc(uid);
                 
                 let alreadyProcessed = false;
+                let userEmailForReceipt = null;
 
                 await db.runTransaction(async (t) => {
                     // Evitar duplicados leyendo DENTRO de la transacción
@@ -76,9 +77,15 @@ export default async function handler(req, res) {
                             monto: paymentData.transaction_amount,
                             metodo: paymentData.payment_method_id
                         });
+                        // Capturar email para enviar recibo afuera de la transacción
+                        userEmailForReceipt = userSnap.data().email;
+                    });
+
+                    if (!alreadyProcessed) {
+                        console.log(`Pago aprobado: ${creditsToAdd} créditos añadidos a ${uid}`);
                         
-                        // Enviar recibo por correo fuera de la transacción (para evitar reintentos si falla algo interno)
-                        if (process.env.RESEND_API_KEY && userSnap.data().email) {
+                        // Enviar recibo por correo fuera de la transacción (para evitar reintentos si Firebase reintenta)
+                        if (process.env.RESEND_API_KEY && userEmailForReceipt) {
                             fetch('https://api.resend.com/emails', {
                                 method: 'POST',
                                 headers: {
@@ -87,7 +94,7 @@ export default async function handler(req, res) {
                                 },
                                 body: JSON.stringify({
                                     from: 'DidactIA <hola@didactia.app>',
-                                    to: [userSnap.data().email],
+                                    to: [userEmailForReceipt],
                                     subject: 'Recibo de Compra - DidactIA',
                                     html: `<div style="font-family:sans-serif; padding:20px; text-align:center;">
                                         <h2>¡Gracias por tu compra!</h2>
@@ -98,10 +105,6 @@ export default async function handler(req, res) {
                                 })
                             }).catch(err => console.error("Error enviando correo de recibo:", err));
                         }
-                    });
-
-                    if (!alreadyProcessed) {
-                        console.log(`Pago aprobado: ${creditsToAdd} créditos añadidos a ${uid}`);
                     }
                 }
             }
