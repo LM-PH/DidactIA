@@ -41,16 +41,21 @@ export default async function handler(req, res) {
                 const creditsToAdd = Number(paymentData.metadata.credits);
                 const paymentId = String(paymentData.id);
 
-                // Evitar duplicados revisando si este paymentId ya fue procesado
                 const txRef = db.collection('transactions').doc(`pay_${paymentId}`);
-                const txSnap = await txRef.get();
+                const userRef = db.collection('usuarios').doc(uid);
+                
+                let alreadyProcessed = false;
 
-                if (!txSnap.exists) {
-                    const userRef = db.collection('usuarios').doc(uid);
-                    
-                    await db.runTransaction(async (t) => {
-                        const userSnap = await t.get(userRef);
-                        if (!userSnap.exists) throw new Error("Usuario no encontrado");
+                await db.runTransaction(async (t) => {
+                    // Evitar duplicados leyendo DENTRO de la transacción
+                    const txSnap = await t.get(txRef);
+                    if (txSnap.exists) {
+                        alreadyProcessed = true;
+                        return; // Salir silenciosamente
+                    }
+
+                    const userSnap = await t.get(userRef);
+                    if (!userSnap.exists) throw new Error("Usuario no encontrado");
                         
                         const currentCredits = userSnap.data().creditos || 0;
                         
@@ -94,9 +99,9 @@ export default async function handler(req, res) {
                         }
                     });
 
-                    console.log(`Pago aprobado: ${creditsToAdd} créditos añadidos a ${uid}`);
-                } else {
-                    console.log(`Pago ${paymentId} ya procesado anteriormente.`);
+                    if (!alreadyProcessed) {
+                        console.log(`Pago aprobado: ${creditsToAdd} créditos añadidos a ${uid}`);
+                    }
                 }
             }
         } catch (error) {
