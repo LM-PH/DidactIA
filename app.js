@@ -302,21 +302,41 @@ document.addEventListener('DOMContentLoaded', () => {
             finalHtml = match[0];
             cleanText = aiOutput.replace(planeacionRegex, '\n*(Planeación disponible en el visor derecho)*\n').trim();
             
-            // Extraer y guardar metadatos si existen
-            const metadataRegex = /<div id=["']metadata-planeacion["']\s+data-contenido=["'](.*?)["']\s+data-pdas=["'](.*?)["']\s+data-proyecto=["'](.*?)["']\s+data-resumen=["'](.*?)["'].*?><\/div>/i;
-            const metaMatch = finalHtml.match(metadataRegex);
-            if (metaMatch && USER_DATA?.uid) {
+            // Extraer y guardar metadatos de forma segura usando el DOM (en lugar de Regex)
+            if (USER_DATA?.uid) {
                 try {
-                    await addDoc(collection(db, "proyectos"), {
-                        uid: USER_DATA.uid,
-                        contenido: metaMatch[1],
-                        pdas: metaMatch[2],
-                        nombre_proyecto: metaMatch[3],
-                        resumen: metaMatch[4],
-                        html: finalHtml,
-                        fecha: new Date().toISOString()
-                    });
-                    console.log("Proyecto guardado en el historial");
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = finalHtml;
+                    const metaDiv = tempDiv.querySelector('#metadata-planeacion');
+                    
+                    if (metaDiv) {
+                        const contenido = metaDiv.getAttribute('data-contenido') || '';
+                        const pdas = metaDiv.getAttribute('data-pdas') || '';
+                        const nombreProyecto = metaDiv.getAttribute('data-proyecto') || 'Proyecto';
+                        const resumen = metaDiv.getAttribute('data-resumen') || '';
+                        
+                        await addDoc(collection(db, "proyectos"), {
+                            uid: USER_DATA.uid,
+                            contenido: contenido,
+                            pdas: pdas,
+                            nombre_proyecto: nombreProyecto,
+                            resumen: resumen,
+                            html: finalHtml,
+                            fecha: new Date().toISOString()
+                        });
+                        console.log("Proyecto guardado en el historial");
+                    } else {
+                        // Si no mandó metadata, aun así lo guardamos como Genérico
+                        await addDoc(collection(db, "proyectos"), {
+                            uid: USER_DATA.uid,
+                            contenido: "N/A",
+                            pdas: "N/A",
+                            nombre_proyecto: "Planeación Genérica",
+                            resumen: "Planeación guardada automáticamente.",
+                            html: finalHtml,
+                            fecha: new Date().toISOString()
+                        });
+                    }
                 } catch (e) {
                     console.error("Error al guardar proyecto", e);
                 }
