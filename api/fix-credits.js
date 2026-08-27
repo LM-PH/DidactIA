@@ -22,93 +22,25 @@ export default async function handler(req, res) {
     if (!adminDb) return res.status(500).json({ error: 'DB no init' });
 
     try {
-        const txSnap = await adminDb.collection('transactions').where('tipo', '==', 'compra').get();
-        const purchasesByUid = {};
-        
-        txSnap.forEach(doc => {
-            const tx = doc.data();
-            if (tx.creditos > 0 && tx.uid) {
-                if (!purchasesByUid[tx.uid]) purchasesByUid[tx.uid] = 0;
-                purchasesByUid[tx.uid] += tx.creditos;
-            }
-        });
-
         const results = [];
-        const debugInfo = [];
 
-        // Pre-fetch all proyectos and planeaciones to accurately count per user
-        const proyectosSnap = await adminDb.collection('proyectos').get();
-        const planeacionesSnap = await adminDb.collection('planeaciones').get();
-
-        const planeacionesCountByUid = {};
-        const planeacionesCountByEmail = {};
-
-        proyectosSnap.forEach(doc => {
-            const data = doc.data();
-            if (data.uid) {
-                planeacionesCountByUid[data.uid] = (planeacionesCountByUid[data.uid] || 0) + 1;
-            }
-            if (data.email) {
-                planeacionesCountByEmail[data.email] = (planeacionesCountByEmail[data.email] || 0) + 1;
-            }
-        });
-
-        planeacionesSnap.forEach(doc => {
-            const data = doc.data();
-            if (data.uid) {
-                planeacionesCountByUid[data.uid] = (planeacionesCountByUid[data.uid] || 0) + 1;
-            }
-            if (data.email) {
-                planeacionesCountByEmail[data.email] = (planeacionesCountByEmail[data.email] || 0) + 1;
-            }
-        });
-
-        // Also update all users with their accurate totalPlaneaciones count
-        const allUsersSnap = await adminDb.collection('usuarios').get();
-        for (const userDoc of allUsersSnap.docs) {
-            const uid = userDoc.id;
-            const userData = userDoc.data();
-            const email = userData.email;
-
-            const realPlaneaciones = Math.max(
-                planeacionesCountByUid[uid] || 0,
-                planeacionesCountByEmail[email] || 0,
-                userData.totalPlaneaciones || 0
-            );
-
-            const totalBought = purchasesByUid[uid] || 0;
-
-            // If user bought credits or has planeaciones, let's sync their totalPlaneaciones
-            if (userData.totalPlaneaciones !== realPlaneaciones) {
-                await userDoc.ref.update({ totalPlaneaciones: realPlaneaciones });
-            }
-
-            if (totalBought > 0) {
-                // Expected credits = 1 (free) + totalBought - realPlaneaciones
-                let expected = 1 + totalBought - realPlaneaciones;
-                if (expected < 0) expected = 0;
-
-                debugInfo.push({
-                    email: userData.email,
-                    uid,
-                    totalBought,
-                    realPlaneaciones,
-                    currentCredits: userData.creditos,
-                    expectedCredits: expected
-                });
-
-                if ((userData.creditos || 0) < expected) {
-                    await userDoc.ref.update({
-                        creditos: expected,
-                        plan: 'premium',
-                        totalPlaneaciones: realPlaneaciones
-                    });
-                    results.push(`Restored ${userData.email}: creditos updated from ${userData.creditos} to ${expected}`);
-                }
-            }
-        }
+        // Specifically target chompsjery24@gmail.com as requested by admin
+        const usersSnap = await adminDb.collection('usuarios').where('email', '==', 'chompsjery24@gmail.com').get();
         
-        res.status(200).json({ status: 'ok', results, debugInfo });
+        if (usersSnap.empty) {
+            return res.status(404).json({ error: 'Usuario chompsjery24@gmail.com no encontrado' });
+        }
+
+        for (const doc of usersSnap.docs) {
+            await doc.ref.update({
+                creditos: 17,
+                totalPlaneaciones: 4,
+                plan: 'premium'
+            });
+            results.push(`Updated ${doc.data().email} (ID: ${doc.id}) -> creditos: 17, totalPlaneaciones: 4`);
+        }
+
+        res.status(200).json({ status: 'ok', results });
     } catch(e) {
         console.error(e);
         res.status(500).json({ error: e.message });
