@@ -34,6 +34,7 @@ export default async function handler(req, res) {
         });
 
         const results = [];
+        const debugInfo = [];
 
         for (const [uid, totalBought] of Object.entries(purchasesByUid)) {
             const userRef = adminDb.collection('usuarios').doc(uid);
@@ -42,21 +43,24 @@ export default async function handler(req, res) {
                 const userData = userSnap.data();
                 const planesCount = userData.totalPlaneaciones || 0;
                 
-                // Expected: 1 free + totalBought - planesCount
                 let expected = 1 + totalBought - planesCount;
                 if (expected < 0) expected = 0;
                 
-                if (userData.creditos < expected) {
+                debugInfo.push({ email: userData.email, totalBought, planesCount, current: userData.creditos, expected });
+                
+                if ((userData.creditos || 0) < expected) {
                     await userRef.update({
                         creditos: expected,
                         plan: 'premium'
                     });
                     results.push(`Updated ${userData.email} from ${userData.creditos} to ${expected}`);
                 }
+            } else {
+                debugInfo.push({ uid, status: 'Not found in usuarios' });
             }
         }
         
-        res.status(200).json({ status: 'ok', results });
+        res.status(200).json({ status: 'ok', results, debugInfo });
     } catch(e) {
         res.status(500).json({ error: e.message });
     }
