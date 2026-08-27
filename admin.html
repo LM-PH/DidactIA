@@ -185,6 +185,7 @@
                         <th>Nickname</th>
                         <th>Correo</th>
                         <th>Créditos</th>
+                        <th>Planeaciones</th>
                         <th>Fecha de Registro</th>
                         <th>Acción</th>
                     </tr>
@@ -315,6 +316,7 @@
                     <td><span class="badge">${u.nickname || '—'}</span></td>
                     <td>${u.email}</td>
                     <td><span class="badge-credits ${creditosClass}">${creditos}</span></td>
+                    <td><span style="font-weight: 500;">${u.totalPlaneaciones || 0}</span></td>
                     <td>${fecha}</td>
                     <td><button class="delete-btn" onclick="removeUser('${u.id}','${u.email}')">Eliminar</button></td>
                 `;

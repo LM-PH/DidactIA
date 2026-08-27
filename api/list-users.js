@@ -48,12 +48,24 @@ export default async function handler(req, res) {
         const snapshot = await adminDb.collection('usuarios').orderBy('fechaRegistro', 'desc').get();
         const users = [];
         
-        snapshot.forEach(doc => {
+        for (const doc of snapshot.docs) {
+            const data = doc.data();
+            
+            // Count planeaciones for this user
+            let totalPlaneaciones = 0;
+            try {
+                const countSnap = await adminDb.collection('proyectos').where('uid', '==', doc.id).count().get();
+                totalPlaneaciones = countSnap.data().count;
+            } catch (err) {
+                console.error("Error counting planeaciones for user:", doc.id, err);
+            }
+
             users.push({
                 id: doc.id,
-                ...doc.data()
+                ...data,
+                totalPlaneaciones
             });
-        });
+        }
 
         return res.status(200).json({ users });
     } catch (error) {
