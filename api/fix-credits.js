@@ -24,20 +24,16 @@ export default async function handler(req, res) {
     try {
         const results = [];
 
-        // Specifically target chompsjery24@gmail.com as requested by admin
+        // Force update chompsjery24@gmail.com to 17 credits and 4 planeaciones
         const usersSnap = await adminDb.collection('usuarios').where('email', '==', 'chompsjery24@gmail.com').get();
         
-        if (usersSnap.empty) {
-            return res.status(404).json({ error: 'Usuario chompsjery24@gmail.com no encontrado' });
-        }
-
         for (const doc of usersSnap.docs) {
             await doc.ref.update({
                 creditos: 17,
                 totalPlaneaciones: 4,
                 plan: 'premium'
             });
-            results.push(`Updated ${doc.data().email} (ID: ${doc.id}) -> creditos: 17, totalPlaneaciones: 4`);
+            results.push(`Updated ${doc.data().email} -> creditos: 17, totalPlaneaciones: 4`);
         }
 
         res.status(200).json({ status: 'ok', results });
