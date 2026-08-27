@@ -27,7 +27,7 @@ export default async function handler(req, res) {
         
         txSnap.forEach(doc => {
             const tx = doc.data();
-            if (tx.creditos > 0) {
+            if (tx.creditos > 0 && tx.uid) {
                 if (!purchasesByUid[tx.uid]) purchasesByUid[tx.uid] = 0;
                 purchasesByUid[tx.uid] += tx.creditos;
             }
@@ -36,32 +36,81 @@ export default async function handler(req, res) {
         const results = [];
         const debugInfo = [];
 
-        for (const [uid, totalBought] of Object.entries(purchasesByUid)) {
-            const userRef = adminDb.collection('usuarios').doc(uid);
-            const userSnap = await userRef.get();
-            if (userSnap.exists) {
-                const userData = userSnap.data();
-                const planesCount = userData.totalPlaneaciones || 0;
-                
-                let expected = 1 + totalBought - planesCount;
+        // Pre-fetch all proyectos and planeaciones to accurately count per user
+        const proyectosSnap = await adminDb.collection('proyectos').get();
+        const planeacionesSnap = await adminDb.collection('planeaciones').get();
+
+        const planeacionesCountByUid = {};
+        const planeacionesCountByEmail = {};
+
+        proyectosSnap.forEach(doc => {
+            const data = doc.data();
+            if (data.uid) {
+                planeacionesCountByUid[data.uid] = (planeacionesCountByUid[data.uid] || 0) + 1;
+            }
+            if (data.email) {
+                planeacionesCountByEmail[data.email] = (planeacionesCountByEmail[data.email] || 0) + 1;
+            }
+        });
+
+        planeacionesSnap.forEach(doc => {
+            const data = doc.data();
+            if (data.uid) {
+                planeacionesCountByUid[data.uid] = (planeacionesCountByUid[data.uid] || 0) + 1;
+            }
+            if (data.email) {
+                planeacionesCountByEmail[data.email] = (planeacionesCountByEmail[data.email] || 0) + 1;
+            }
+        });
+
+        // Also update all users with their accurate totalPlaneaciones count
+        const allUsersSnap = await adminDb.collection('usuarios').get();
+        for (const userDoc of allUsersSnap.docs) {
+            const uid = userDoc.id;
+            const userData = userDoc.data();
+            const email = userData.email;
+
+            const realPlaneaciones = Math.max(
+                planeacionesCountByUid[uid] || 0,
+                planeacionesCountByEmail[email] || 0,
+                userData.totalPlaneaciones || 0
+            );
+
+            const totalBought = purchasesByUid[uid] || 0;
+
+            // If user bought credits or has planeaciones, let's sync their totalPlaneaciones
+            if (userData.totalPlaneaciones !== realPlaneaciones) {
+                await userDoc.ref.update({ totalPlaneaciones: realPlaneaciones });
+            }
+
+            if (totalBought > 0) {
+                // Expected credits = 1 (free) + totalBought - realPlaneaciones
+                let expected = 1 + totalBought - realPlaneaciones;
                 if (expected < 0) expected = 0;
-                
-                debugInfo.push({ email: userData.email, totalBought, planesCount, current: userData.creditos, expected });
-                
+
+                debugInfo.push({
+                    email: userData.email,
+                    uid,
+                    totalBought,
+                    realPlaneaciones,
+                    currentCredits: userData.creditos,
+                    expectedCredits: expected
+                });
+
                 if ((userData.creditos || 0) < expected) {
-                    await userRef.update({
+                    await userDoc.ref.update({
                         creditos: expected,
-                        plan: 'premium'
+                        plan: 'premium',
+                        totalPlaneaciones: realPlaneaciones
                     });
-                    results.push(`Updated ${userData.email} from ${userData.creditos} to ${expected}`);
+                    results.push(`Restored ${userData.email}: creditos updated from ${userData.creditos} to ${expected}`);
                 }
-            } else {
-                debugInfo.push({ uid, status: 'Not found in usuarios' });
             }
         }
         
         res.status(200).json({ status: 'ok', results, debugInfo });
     } catch(e) {
+        console.error(e);
         res.status(500).json({ error: e.message });
     }
 }
