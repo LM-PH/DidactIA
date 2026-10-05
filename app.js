@@ -180,7 +180,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     addMessage(`¡Hola ${primerNombre}! 👋 Soy DidactIA. Vamos a crear una nueva planeación didáctica. Para comenzar de forma rápida y ahorrarte tiempo, por favor compárteme tus **Datos Generales** (puedes escribirlos separados por comas o saltos de línea):\n\n🏫 Escuela:\n👩‍🏫 Docente:\n📅 Ciclo y Periodo:\n📚 Asignatura:\n🎓 Grado y Grupo:`, 'bot');
                 }
             } else {
-                console.warn("User document not found in onSnapshot. Waiting for sync or registration.");
+                console.warn("User document not found in onSnapshot. Intentando restaurar/crear...");
+                // Restaurar documento para usuarios afectados por el bug anterior
+                setDoc(userRef, {
+                    nombre: user.displayName || "Docente DidactIA",
+                    nickname: (user.displayName || "Docente").split(' ')[0],
+                    email: user.email,
+                    fotoPerfil: user.photoURL || "",
+                    proveedor: "google",
+                    creditos: 1,
+                    plan: "gratis",
+                    fechaRegistro: new Date().toISOString(),
+                    uid: user.uid
+                }).catch(err => console.error("Error restaurando usuario:", err));
             }
         });
     });
